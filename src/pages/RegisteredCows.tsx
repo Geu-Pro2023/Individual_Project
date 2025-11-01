@@ -151,7 +151,7 @@ const RegisteredCows = () => {
                 ) : (
                   cows.map((cow) => (
                     <TableRow key={cow.cow_id || cow.id}>
-                      <TableCell className="font-mono font-bold text-primary">
+                      <TableCell className="font-mono font-bold text-primary whitespace-nowrap">
                         {cow.cow_tag || 'N/A'}
                       </TableCell>
                       <TableCell className="font-medium">
