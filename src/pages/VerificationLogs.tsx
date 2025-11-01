@@ -24,6 +24,8 @@ const VerificationLogs = () => {
   const [selectedLog, setSelectedLog] = useState<any>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [deletingLogId, setDeletingLogId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<any>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -157,28 +159,32 @@ const VerificationLogs = () => {
     setShowDetailsModal(true);
   };
 
-  const handleDeleteLog = async (logId: number) => {
-    const logToDelete = logs.find(log => log.log_id === logId);
-    const cowTag = logToDelete?.cow_tag || 'Unknown';
-    const date = logToDelete?.created_at ? new Date(logToDelete.created_at).toLocaleDateString() : 'Unknown date';
+  const handleDeleteLog = (logId: number) => {
+    const log = logs.find(log => log.log_id === logId);
+    setLogToDelete(log);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!logToDelete) return;
     
-    if (!confirm(`Delete verification log for cow ${cowTag} from ${date}?\n\nThis action cannot be undone and will permanently remove this verification record from the system.`)) {
-      return;
-    }
+    const cowTag = logToDelete.cow_tag || 'Unknown';
+    setDeletingLogId(logToDelete.log_id);
+    setShowDeleteModal(false);
     
-    setDeletingLogId(logId);
     try {
       // Note: You'll need to add this endpoint to your FastAPI backend
-      // await verificationAPI.deleteLog(logId);
+      // await verificationAPI.deleteLog(logToDelete.log_id);
       
       // Remove from local state
-      setLogs(prev => prev.filter(log => log.log_id !== logId));
+      setLogs(prev => prev.filter(log => log.log_id !== logToDelete.log_id));
       toast.success(`Verification log for cow ${cowTag} has been permanently deleted from the system`);
     } catch (error) {
       console.error('Failed to delete log:', error);
       toast.error('Failed to delete verification log');
     } finally {
       setDeletingLogId(null);
+      setLogToDelete(null);
     }
   };
 
@@ -427,7 +433,7 @@ const VerificationLogs = () => {
                             size="icon" 
                             variant="ghost" 
                             title="Delete Log" 
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleDeleteLog(log.log_id)}
                             disabled={deletingLogId === log.log_id}
                           >
@@ -527,6 +533,62 @@ const VerificationLogs = () => {
                 <div className="bg-muted p-3 rounded text-sm">
                   <p>This verification log shows the result of a cow identification attempt. The similarity score indicates how closely the submitted data matched the registered cow information.</p>
                 </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Verification Log
+            </DialogTitle>
+          </DialogHeader>
+          {logToDelete && (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-red-100 rounded-full p-2">
+                    <XCircle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-red-800 mb-1">
+                      Permanently Delete Log?
+                    </h3>
+                    <p className="text-sm text-red-700 mb-2">
+                      You are about to delete the verification log for:
+                    </p>
+                    <div className="bg-white rounded border border-red-200 p-3 text-sm">
+                      <p><strong>Cow Tag:</strong> {logToDelete.cow_tag || 'N/A'}</p>
+                      <p><strong>Date:</strong> {logToDelete.created_at ? new Date(logToDelete.created_at).toLocaleDateString() : 'N/A'}</p>
+                      <p><strong>Status:</strong> {logToDelete.verified === 'yes' ? 'Verified' : 'Failed'}</p>
+                    </div>
+                    <p className="text-sm text-red-700 mt-2 font-medium">
+                      ⚠️ This action cannot be undone and will permanently remove this record from the system.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDeleteModal(false)}
+                  className="border-gray-300 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={confirmDelete}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  disabled={deletingLogId === logToDelete.log_id}
+                >
+                  {deletingLogId === logToDelete.log_id ? 'Deleting...' : 'Delete Permanently'}
+                </Button>
               </div>
             </div>
           )}
