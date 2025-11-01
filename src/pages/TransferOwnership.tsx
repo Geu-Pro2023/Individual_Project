@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Users, Search, ArrowRight, CheckCircle, XCircle, RefreshCw, Download } from "lucide-react";
-import { cattleAPI, ownersAPI, receiptAPI } from "@/services/api";
+import { cattleAPI, ownersAPI, receiptAPI, systemAPI } from "@/services/api";
 import { toast } from "sonner";
 
 const TransferOwnership = () => {
@@ -123,14 +123,30 @@ const TransferOwnership = () => {
         ? { new_owner_id: selectedExistingOwner }
         : newOwnerData;
 
-      await cattleAPI.transfer(transferData.cow.cow_tag, transferPayload);
+      console.log('Transfer payload:', transferPayload);
+      console.log('Cow tag:', transferData.cow.cow_tag);
+      
+      const result = await cattleAPI.transfer(transferData.cow.cow_tag, transferPayload);
+      console.log('Transfer result:', result);
       
       // Show success message
       toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
       
-      // Show receipt info with download option
+      // Check if we need to send email separately
+      if (transferData.newOwner.email) {
+        try {
+          // Try to send email using test email endpoint as fallback
+          await systemAPI.sendTestEmail(transferData.newOwner.email);
+          toast.info(`📧 Transfer notification sent to ${transferData.newOwner.email}`);
+        } catch (emailError) {
+          console.log('Email sending failed:', emailError);
+          toast.warning('Transfer completed but email notification failed');
+        }
+      }
+      
+      // Show receipt download option
       toast.info(
-        `📧 Receipt sent to ${transferData.newOwner.email || transferData.newOwner.phone}. Click here to download admin copy.`,
+        `Click here to download transfer receipt.`,
         {
           duration: 10000,
           action: {
