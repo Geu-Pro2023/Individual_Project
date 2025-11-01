@@ -80,31 +80,30 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
       
       {!preview && !isCapturing && (
         <div className="aspect-square rounded-lg border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 transition-colors">
-          <div className="h-full flex flex-col items-center justify-center gap-2 p-4">
-            <div className="flex gap-2">
+          <div className="h-full flex flex-col items-center justify-center gap-4 p-4">
+            <Camera className="h-12 w-12 text-muted-foreground" />
+            <div className="flex flex-col gap-2 w-full">
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={startCamera}
-                className="flex-1"
+                className="w-full"
+                size="lg"
               >
-                <Camera className="h-4 w-4 mr-1" />
-                Camera
+                <Camera className="h-5 w-5 mr-2" />
+                Open Camera
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-1"
+                className="w-full"
               >
-                <Upload className="h-4 w-4 mr-1" />
-                Upload
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Image
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Take photo or upload image
+              Capture nose print using camera or upload existing image
             </p>
           </div>
         </div>
@@ -118,12 +117,18 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
             playsInline
             className="w-full h-full object-cover"
           />
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            <Button onClick={capturePhoto} size="sm">
-              <Camera className="h-4 w-4 mr-1" />
-              Capture
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-4 border-2 border-white/50 rounded-lg"></div>
+            <p className="absolute top-6 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded">
+              Position cow nose in frame
+            </p>
+          </div>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+            <Button onClick={capturePhoto} size="lg" className="bg-white text-black hover:bg-gray-100">
+              <Camera className="h-5 w-5 mr-2" />
+              Capture Photo
             </Button>
-            <Button onClick={stopCamera} variant="outline" size="sm">
+            <Button onClick={stopCamera} variant="outline" size="lg" className="bg-black/50 text-white border-white/50 hover:bg-black/70">
               Cancel
             </Button>
           </div>
@@ -131,31 +136,42 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
       )}
 
       {preview && (
-        <div className="aspect-square rounded-lg overflow-hidden relative group">
-          <img src={preview} alt={label} className="w-full h-full object-cover" />
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="h-6 w-6"
-              onClick={clearImage}
-            >
-              <X className="h-3 w-3" />
-            </Button>
+        <div className="space-y-3">
+          <div className="aspect-square rounded-lg overflow-hidden relative group border-2 border-green-200">
+            <img src={preview} alt={label} className="w-full h-full object-cover" />
+            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
+              ✓ Captured
+            </div>
           </div>
-          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-2">
             <Button
               type="button"
-              variant="secondary"
-              size="icon"
-              className="h-6 w-6"
+              variant="outline"
               onClick={() => {
                 clearImage();
                 startCamera();
               }}
+              className="flex-1"
             >
-              <RotateCcw className="h-3 w-3" />
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Retake Photo
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Different
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={clearImage}
+              className="px-3"
+            >
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
