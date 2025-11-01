@@ -20,101 +20,39 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const startCamera = async (preferredFacing: 'user' | 'environment' = facingMode) => {
+  const startCamera = async () => {
     setIsLoading(true);
     setCameraError("");
     
-    // Check if camera is supported
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setIsLoading(false);
-      setCameraError("Camera not supported in this browser. Please use upload instead.");
-      return;
-    }
-    
-    // Stop existing stream
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    
     try {
-      // Check permissions first
-      const permission = await navigator.permissions.query({ name: 'camera' as PermissionName });
-      console.log('Camera permission:', permission.state);
+      // Stop existing stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
       
-      if (permission.state === 'denied') {
+      // Simple camera request
+      const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        setStream(newStream);
+        setIsCapturing(true);
         setIsLoading(false);
-        setCameraError("Camera permission denied. Please enable camera access in browser settings and refresh the page.");
-        return;
       }
-    } catch (e) {
-      console.log('Permission check failed, continuing anyway');
-    }
-    
-    const constraints = [
-      { video: true },
-      { video: { facingMode: preferredFacing } },
-      { video: { width: 320, height: 240 } }
-    ];
-    
-    for (let i = 0; i < constraints.length; i++) {
-      try {
-        console.log(`Trying constraint ${i + 1}:`, constraints[i]);
-        const newStream = await navigator.mediaDevices.getUserMedia(constraints[i]);
-        
-        console.log('Stream obtained:', newStream);
-        console.log('Video tracks:', newStream.getVideoTracks());
-        
-        if (videoRef.current && newStream.getVideoTracks().length > 0) {
-          videoRef.current.srcObject = newStream;
-          setStream(newStream);
-          setFacingMode(preferredFacing);
-          
-          // Wait for video to be ready
-          videoRef.current.onloadeddata = () => {
-            console.log('Video loaded, showing camera');
-            setIsCapturing(true);
-            setIsLoading(false);
-          };
-          
-          // Fallback timeout
-          setTimeout(() => {
-            if (isLoading) {
-              console.log('Timeout fallback - showing camera');
-              setIsCapturing(true);
-              setIsLoading(false);
-            }
-          }, 2000);
-          
-          return; // Success!
-        }
-      } catch (error: any) {
-        console.log(`Constraint ${i + 1} failed:`, error.name, error.message);
-        
-        if (error.name === 'NotAllowedError') {
-          setIsLoading(false);
-          setCameraError("Camera access denied. Please click 'Allow' when browser asks for camera permission.");
-          return;
-        }
-        
-        if (error.name === 'NotFoundError') {
-          setIsLoading(false);
-          setCameraError("No camera found on this device. Please use upload instead.");
-          return;
-        }
-        
-        continue; // Try next constraint
+    } catch (error: any) {
+      setIsLoading(false);
+      
+      if (error.name === 'NotAllowedError') {
+        setCameraError("Please allow camera access when prompted by your browser.");
+      } else if (error.name === 'NotFoundError') {
+        setCameraError("No camera found. Please use upload instead.");
+      } else {
+        setCameraError("Camera not available. Please use upload instead.");
       }
     }
-    
-    // All constraints failed
-    setIsLoading(false);
-    setCameraError("Camera initialization failed. Please refresh the page and try again, or use upload instead.");
   };
   
-  const switchCamera = () => {
-    const newFacing = facingMode === 'environment' ? 'user' : 'environment';
-    startCamera(newFacing);
-  };
+
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -239,17 +177,7 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
               📸 Position cow nose in frame
             </div>
           </div>
-          <div className="absolute top-4 right-4">
-            <Button 
-              onClick={switchCamera}
-              size="sm"
-              variant="outline"
-              className="bg-black/50 text-white border-white/50 hover:bg-black/70"
-              title="Switch Camera"
-            >
-              🔄
-            </Button>
-          </div>
+
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
             <Button 
               onClick={capturePhoto} 
