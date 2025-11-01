@@ -125,24 +125,19 @@ const TransferOwnership = () => {
 
       await cattleAPI.transfer(transferData.cow.cow_id || transferData.cow.id, transferPayload);
       
-      // Show success with receipt info
-      toast.success(
-        <div className="space-y-2">
-          <div>Cow {transferData.cow.cow_tag} successfully transferred to {transferData.newOwner.full_name}</div>
-          <div className="text-xs text-green-700">
-            📧 Transfer receipt sent to {transferData.newOwner.email || transferData.newOwner.phone}
-          </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => downloadTransferReceipt(transferData.cow.cow_tag)}
-            className="mt-2"
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Download Copy
-          </Button>
-        </div>,
-        { duration: 12000 }
+      // Show success message
+      toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
+      
+      // Show receipt info with download option
+      toast.info(
+        `📧 Receipt sent to ${transferData.newOwner.email || transferData.newOwner.phone}. Click here to download admin copy.`,
+        {
+          duration: 10000,
+          action: {
+            label: "Download",
+            onClick: () => downloadTransferReceipt(transferData.cow.cow_tag)
+          }
+        }
       );
       
       // Reset form
@@ -399,10 +394,10 @@ const TransferOwnership = () => {
               
               <div className="text-center mt-3">
                 <p className="text-xs text-blue-600">
-                  📄 Transfer receipt will be automatically sent to new owner's email
+                  📄 Transfer receipt will be sent to new owner (if email configured)
                 </p>
                 <p className="text-xs text-blue-500 mt-1">
-                  📎 Admin copy will be available for download
+                  📎 Admin can download receipt copy after transfer
                 </p>
               </div>
             </div>
