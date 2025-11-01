@@ -45,11 +45,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
       />
-      <div className={`h-full flex flex-col transition-all duration-300 ${
-        window.innerWidth >= 1024 
-          ? (isCollapsed ? 'ml-16' : 'ml-64')
-          : 'ml-0'
-      }`}>
+      <div className={`h-full flex flex-col transition-all duration-300 ${isCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Enhanced Header */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/50 bg-gradient-to-r from-background/95 to-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm px-6">
           <div className="flex items-center gap-4">

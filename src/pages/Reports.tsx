@@ -138,9 +138,9 @@ const Reports = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Get all Reports</h1>
+          <h1 className="text-3xl font-bold text-foreground">Reports Management</h1>
           <p className="text-muted-foreground mt-1">
-            Review and manage submitted reports
+            Get all reports and reply to them
           </p>
         </div>
         <Button onClick={fetchReports} disabled={loading}>
