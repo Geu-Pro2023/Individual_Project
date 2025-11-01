@@ -36,6 +36,8 @@ export const Sidebar = ({
       title: "Cattle Management",
       items: [
         { name: "Register Cow", href: "/register", icon: Beef },
+        { name: "Get all Registered Cows", href: "/all-cows", icon: Beef },
+        { name: "Get all Owners", href: "/all-owners", icon: Users },
         { name: "Verify Cow", href: "/verify", icon: FileCheck },
         { name: "Update Cow", href: "/update-cow", icon: Settings },
         { name: "Delete Cow", href: "/delete-cow", icon: Trash2 },
