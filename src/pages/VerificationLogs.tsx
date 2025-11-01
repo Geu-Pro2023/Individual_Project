@@ -17,6 +17,11 @@ const VerificationLogs = () => {
     setLoading(true);
     try {
       const data = await verificationAPI.getLogs();
+      console.log('Raw verification logs response:', data);
+      console.log('Verifications array:', data.verifications);
+      if (data.verifications && data.verifications.length > 0) {
+        console.log('First log entry:', data.verifications[0]);
+      }
       setLogs(data.verifications || []);
     } catch (error) {
       console.error('Failed to fetch verification logs:', error);
