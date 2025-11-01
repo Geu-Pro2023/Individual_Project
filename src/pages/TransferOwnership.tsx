@@ -282,17 +282,9 @@ const TransferOwnership = () => {
       // Show success message
       toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
       
-      // Enhanced success handling
-      if (sendEmail && transferData.newOwner.email) {
+      // Show email confirmation if backend sent email
+      if (result.email_sent) {
         toast.success(`📧 Transfer receipt sent to ${transferData.newOwner.email}`);
-      }
-      
-      if (sendSMS && transferData.newOwner.phone) {
-        toast.success(`📱 SMS notification sent to ${transferData.newOwner.phone}`);
-      }
-      
-      if (requireApproval) {
-        toast.info(`⏳ Transfer pending admin approval (Ref: ${transferRef})`);
       }
       
       // Show receipt download option
