@@ -14,61 +14,62 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
   const [isCapturing, setIsCapturing] = useState(false);
   const [cameraError, setCameraError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const startCamera = async () => {
+  const startCamera = async (preferredFacing: 'user' | 'environment' = facingMode) => {
     setIsLoading(true);
     setCameraError("");
     
-    // Timeout after 10 seconds
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-      setCameraError("Camera loading timeout. Please try again or use upload instead.");
-    }, 10000);
-    
-    try {
-      // Try with simpler constraints first
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true
-      });
-      
-      clearTimeout(timeout);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Set up event handlers
-        videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded');
-          setIsCapturing(true);
-          setIsLoading(false);
-        };
-        
-        videoRef.current.oncanplay = () => {
-          console.log('Video can play');
-          if (!isCapturing) {
-            setIsCapturing(true);
-            setIsLoading(false);
-          }
-        };
-        
-        // Fallback - force show after 3 seconds if events don't fire
-        setTimeout(() => {
-          if (isLoading) {
-            console.log('Forcing camera display');
-            setIsCapturing(true);
-            setIsLoading(false);
-          }
-        }, 3000);
-      }
-    } catch (error: any) {
-      clearTimeout(timeout);
-      console.error("Camera access error:", error);
-      setCameraError(`Camera error: ${error.message || 'Access denied'}. Please allow camera permission and try again.`);
-      setIsLoading(false);
+    // Stop existing stream
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
+    
+    const constraints = [
+      // Try preferred camera first
+      { video: { facingMode: preferredFacing } },
+      // Fallback to any camera
+      { video: true },
+      // Last resort - basic video
+      { video: { width: 640, height: 480 } }
+    ];
+    
+    for (const constraint of constraints) {
+      try {
+        console.log('Trying constraint:', constraint);
+        const newStream = await navigator.mediaDevices.getUserMedia(constraint);
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+          setStream(newStream);
+          setFacingMode(preferredFacing);
+          
+          // Simple approach - just show after stream is set
+          setTimeout(() => {
+            setIsCapturing(true);
+            setIsLoading(false);
+          }, 500);
+          
+          return; // Success!
+        }
+      } catch (error) {
+        console.log('Constraint failed:', constraint, error);
+        continue; // Try next constraint
+      }
+    }
+    
+    // All constraints failed
+    setIsLoading(false);
+    setCameraError("Camera not available. Please use upload instead or check camera permissions.");
+  };
+  
+  const switchCamera = () => {
+    const newFacing = facingMode === 'environment' ? 'user' : 'environment';
+    startCamera(newFacing);
   };
 
   const capturePhoto = () => {
@@ -93,9 +94,12 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
   };
 
   const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
+    if (stream) {
       stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setIsCapturing(false);
   };
@@ -185,6 +189,17 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
             <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-3 py-1 rounded">
               📸 Position cow nose in frame
             </div>
+          </div>
+          <div className="absolute top-4 right-4">
+            <Button 
+              onClick={switchCamera}
+              size="sm"
+              variant="outline"
+              className="bg-black/50 text-white border-white/50 hover:bg-black/70"
+              title="Switch Camera"
+            >
+              🔄
+            </Button>
           </div>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
             <Button 
