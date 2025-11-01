@@ -117,9 +117,9 @@ const Reports = () => {
                   </TableRow>
                 ) : (
                   reports.map((report) => (
-                    <TableRow key={report.id}>
+                    <TableRow key={report.report_id}>
                       <TableCell className="font-mono font-semibold">
-                        RPT-{report.id.toString().padStart(3, '0')}
+                        RPT-{report.report_id.toString().padStart(3, '0')}
                       </TableCell>
                       <TableCell>{new Date(report.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>{report.reporter_name}</TableCell>
