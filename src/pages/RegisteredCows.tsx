@@ -32,7 +32,13 @@ const RegisteredCows = () => {
 
   const handleViewQR = async (cowTag: string) => {
     try {
-      window.open(`https://titweng.app/verify/${cowTag}`, '_blank');
+      // Extract cow_id from cow data for QR verification
+      const cow = cows.find(c => c.cow_tag === cowTag);
+      if (cow && cow.cow_id) {
+        window.open(`https://titweng.app/verify/${cow.cow_id}`, '_blank');
+      } else {
+        toast.error('Cow ID not found');
+      }
     } catch (error) {
       toast.error('Failed to open QR code');
     }
@@ -65,7 +71,20 @@ const RegisteredCows = () => {
 
   const handleViewFace = async (cowTag: string) => {
     try {
-      window.open(`https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/cow/${cowTag}/face`, '_blank');
+      const response = await fetch(`https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/cow/${cowTag}/face`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const imageUrl = window.URL.createObjectURL(blob);
+        window.open(imageUrl, '_blank');
+        toast.success('Cow face image opened');
+      } else {
+        toast.error('Failed to load cow face image');
+      }
     } catch (error) {
       toast.error('Failed to view cow face');
     }
