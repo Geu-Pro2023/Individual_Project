@@ -136,7 +136,7 @@ const RegisteredCows = () => {
                       <TableCell>{cow.color || 'N/A'}</TableCell>
                       <TableCell>{cow.age || 'N/A'}</TableCell>
                       <TableCell className="text-sm">
-                        {cow.created_at ? new Date(cow.created_at).toLocaleDateString() : 'N/A'}
+                        {cow.registered_at ? new Date(cow.registered_at).toLocaleDateString() : 'N/A'}
                       </TableCell>
                     </TableRow>
                   ))
