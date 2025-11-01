@@ -14,6 +14,7 @@ import ReplyReport from "./pages/ReplyReport";
 import RegisteredCows from "./pages/RegisteredCows";
 import Analytics from "./pages/Analytics";
 import VerificationLogs from "./pages/VerificationLogs";
+import TransferOwnership from "./pages/TransferOwnership";
 import Settings from "./pages/Settings";
 import System from "./pages/System";
 import Login from "./pages/Login";
@@ -54,6 +55,7 @@ const App = () => {
             <Route path="/registered-cows" element={<ProtectedRoute><DashboardLayout><RegisteredCows /></DashboardLayout></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
             <Route path="/logs" element={<ProtectedRoute><DashboardLayout><VerificationLogs /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/transfer-ownership" element={<ProtectedRoute><DashboardLayout><TransferOwnership /></DashboardLayout></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
             <Route path="/system" element={<ProtectedRoute><DashboardLayout><System /></DashboardLayout></ProtectedRoute>} />
             <Route path="/update-cow" element={<ProtectedRoute><DashboardLayout><UpdateCow /></DashboardLayout></ProtectedRoute>} />

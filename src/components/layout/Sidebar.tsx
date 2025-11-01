@@ -42,7 +42,7 @@ export const Sidebar = ({
         { name: "Delete Cow", href: "/delete-cow", icon: Trash2 },
         { name: "Download Cow Receipt", href: "/download-receipt", icon: Download },
         { name: "View Cow Facial Image", href: "/view-cow-face", icon: Eye },
-        { name: "Transfer Cow Ownership", href: "/cattle", icon: Users },
+        { name: "Transfer Cow Ownership", href: "/transfer-ownership", icon: Users },
       ]
     },
     {
