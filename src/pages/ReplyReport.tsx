@@ -27,18 +27,32 @@ const ReplyReport = () => {
     setSearching(true);
     try {
       const data = await reportsAPI.getAll();
-      const foundReport = data.reports?.find((r: any) => r.id.toString() === reportId);
+      console.log('API Response:', data);
+      console.log('Looking for ID:', reportId);
       
-      if (foundReport) {
-        setReport(foundReport);
-        setStatus(foundReport.status);
-        toast.success("Report found!");
+      if (data.reports) {
+        console.log('Available reports:', data.reports.map((r: any) => ({ id: r.id, type: typeof r.id })));
+        const foundReport = data.reports.find((r: any) => 
+          r.id.toString() === reportId || 
+          r.id === parseInt(reportId)
+        );
+        
+        if (foundReport) {
+          console.log('Found report:', foundReport);
+          setReport(foundReport);
+          setStatus(foundReport.status);
+          toast.success("Report found!");
+        } else {
+          toast.error(`Report ID ${reportId} not found`);
+          setReport(null);
+        }
       } else {
-        toast.error("Report not found");
+        toast.error("No reports data received");
         setReport(null);
       }
     } catch (error: any) {
-      toast.error("Failed to search report");
+      console.error('Search error:', error);
+      toast.error("Failed to search report: " + error.message);
       setReport(null);
     } finally {
       setSearching(false);
