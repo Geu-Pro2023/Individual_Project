@@ -186,9 +186,58 @@ const RegisteredCows = () => {
         </div>
       </div>
 
-
-
-
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Cows</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{cows.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Recent (7 days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {cows.filter(cow => {
+                if (!cow.registered_at) return false;
+                const regDate = new Date(cow.registered_at);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return regDate > weekAgo;
+              }).length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Top Breed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-semibold">
+              {(() => {
+                const breedCounts = cows.reduce((acc, cow) => {
+                  const breed = cow.breed || 'Unknown';
+                  acc[breed] = (acc[breed] || 0) + 1;
+                  return acc;
+                }, {});
+                return Object.entries(breedCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
+              })()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Filtered Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{filteredCows.length}</div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="shadow-card">
         <CardContent className="p-0">
