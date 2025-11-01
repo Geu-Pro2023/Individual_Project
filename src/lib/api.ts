@@ -56,6 +56,18 @@ const apiClient = {
     return response.json();
   },
 
+  putForm: async (endpoint: string, formData: FormData) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
+    return response.json();
+  },
+
   delete: async (endpoint: string) => {
     const token = getAuthToken();
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {

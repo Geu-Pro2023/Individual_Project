@@ -48,6 +48,7 @@ export const Sidebar = ({
       title: "Report",
       items: [
         { name: "Get all Reports", href: "/reports", icon: AlertCircle },
+        { name: "Reply to Report", href: "/reports", icon: FileText },
         { name: "Get all Verification log", href: "/logs", icon: FileText },
       ]
     },

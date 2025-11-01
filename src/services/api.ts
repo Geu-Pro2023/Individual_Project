@@ -81,7 +81,7 @@ export const reportsAPI = {
     const formData = new FormData();
     formData.append('admin_reply', adminReply);
     formData.append('status', status);
-    return apiClient.postForm(`/admin/reports/${reportId}/reply`, formData);
+    return apiClient.putForm(`/admin/reports/${reportId}/reply`, formData);
   },
 };
 
