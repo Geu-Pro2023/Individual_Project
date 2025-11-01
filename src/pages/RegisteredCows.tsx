@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Phone, Mail, Download, Search, QrCode, Receipt, Eye, Edit, ArrowUpDown } from "lucide-react";
+import { RefreshCw, Phone, Mail, Download, Search, Receipt, Eye, Edit, ArrowUpDown, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cattleAPI, ownersAPI } from "@/services/api";
 import { toast } from "sonner";
 
@@ -16,6 +17,8 @@ const RegisteredCows = () => {
   const [breedFilter, setBreedFilter] = useState("");
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [faceModalOpen, setFaceModalOpen] = useState(false);
+  const [selectedCowFace, setSelectedCowFace] = useState<{tag: string, image: string} | null>(null);
 
   useEffect(() => {
     setFilteredCows(cows);
@@ -30,20 +33,7 @@ const RegisteredCows = () => {
     }
   };
 
-  const handleViewQR = async (cowTag: string) => {
-    try {
-      // Use the QR code data from cow object
-      const cow = cows.find(c => c.cow_tag === cowTag);
-      if (cow && cow.qr_code_data) {
-        window.open(cow.qr_code_data, '_blank');
-      } else {
-        // Fallback to verification URL with cow_id
-        window.open(`https://titweng.app/verify/${cow?.cow_id || cowTag}`, '_blank');
-      }
-    } catch (error) {
-      toast.error('Failed to open QR code');
-    }
-  };
+
 
   const handleDownloadReceipt = async (cowTag: string) => {
     try {
@@ -79,15 +69,13 @@ const RegisteredCows = () => {
       });
       
       if (response.ok) {
-        const data = await response.json();
-        if (data.facial_image_url) {
-          window.open(data.facial_image_url, '_blank');
-          toast.success('Cow face image opened');
-        } else {
-          toast.error('No facial image available for this cow');
-        }
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        setSelectedCowFace({ tag: cowTag, image: imageUrl });
+        setFaceModalOpen(true);
+        toast.success('Cow face image loaded');
       } else {
-        toast.error('Failed to load cow face data');
+        toast.error('No facial image available for this cow');
       }
     } catch (error) {
       toast.error('Failed to view cow face');
@@ -352,14 +340,6 @@ const RegisteredCows = () => {
                           <Button 
                             size="sm" 
                             variant="ghost"
-                            onClick={() => handleViewQR(cow.cow_tag)}
-                            title="View QR Code"
-                          >
-                            <QrCode className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
                             onClick={() => handleDownloadReceipt(cow.cow_tag)}
                             title="Download Receipt"
                           >
@@ -383,6 +363,32 @@ const RegisteredCows = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cow Face Modal */}
+      <Dialog open={faceModalOpen} onOpenChange={setFaceModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Cow Facial Image - {selectedCowFace?.tag}
+              </DialogTitle>
+              <Button variant="ghost" size="icon" onClick={() => setFaceModalOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          {selectedCowFace && (
+            <div className="flex justify-center p-4">
+              <img 
+                src={selectedCowFace.image} 
+                alt={`Cow ${selectedCowFace.tag} face`}
+                className="max-w-full max-h-96 rounded-lg shadow-lg"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
