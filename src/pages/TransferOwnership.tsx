@@ -125,21 +125,24 @@ const TransferOwnership = () => {
 
       await cattleAPI.transfer(transferData.cow.cow_id || transferData.cow.id, transferPayload);
       
-      // Show success with receipt download option
+      // Show success with receipt info
       toast.success(
-        <div className="flex items-center justify-between w-full">
-          <span>Cow {transferData.cow.cow_tag} successfully transferred to {transferData.newOwner.full_name}</span>
+        <div className="space-y-2">
+          <div>Cow {transferData.cow.cow_tag} successfully transferred to {transferData.newOwner.full_name}</div>
+          <div className="text-xs text-green-700">
+            📧 Transfer receipt sent to {transferData.newOwner.email || transferData.newOwner.phone}
+          </div>
           <Button 
             size="sm" 
             variant="outline" 
             onClick={() => downloadTransferReceipt(transferData.cow.cow_tag)}
-            className="ml-2"
+            className="mt-2"
           >
             <Download className="h-3 w-3 mr-1" />
-            Receipt
+            Download Copy
           </Button>
         </div>,
-        { duration: 10000 }
+        { duration: 12000 }
       );
       
       // Reset form
@@ -396,7 +399,10 @@ const TransferOwnership = () => {
               
               <div className="text-center mt-3">
                 <p className="text-xs text-blue-600">
-                  📄 A transfer receipt will be available for download after confirmation
+                  📄 Transfer receipt will be automatically sent to new owner's email
+                </p>
+                <p className="text-xs text-blue-500 mt-1">
+                  📎 Admin copy will be available for download
                 </p>
               </div>
             </div>
