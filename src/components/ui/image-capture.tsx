@@ -12,21 +12,34 @@ interface ImageCaptureProps {
 export const ImageCapture = ({ label, onImageCapture, captured }: ImageCaptureProps) => {
   const [preview, setPreview] = useState<string>(captured || "");
   const [isCapturing, setIsCapturing] = useState(false);
+  const [cameraError, setCameraError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const startCamera = async () => {
+    setIsLoading(true);
+    setCameraError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } 
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setIsCapturing(true);
+        videoRef.current.onloadedmetadata = () => {
+          setIsCapturing(true);
+          setIsLoading(false);
+        };
       }
-    } catch (error) {
-      console.error("Camera access denied:", error);
+    } catch (error: any) {
+      console.error("Camera access error:", error);
+      setCameraError(error.message || "Camera access denied");
+      setIsLoading(false);
     }
   };
 
@@ -109,26 +122,58 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
         </div>
       )}
 
-      {isCapturing && (
+      {isLoading && (
+        <div className="aspect-square rounded-lg bg-black flex items-center justify-center">
+          <div className="text-white text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+            <p>Starting camera...</p>
+          </div>
+        </div>
+      )}
+
+      {cameraError && (
+        <div className="aspect-square rounded-lg bg-red-50 border-2 border-red-200 flex items-center justify-center">
+          <div className="text-center p-4">
+            <p className="text-red-600 font-medium mb-2">Camera Error</p>
+            <p className="text-sm text-red-500 mb-3">{cameraError}</p>
+            <Button onClick={startCamera} variant="outline" size="sm">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isCapturing && !isLoading && (
         <div className="aspect-square rounded-lg overflow-hidden bg-black relative">
           <video
             ref={videoRef}
             autoPlay
             playsInline
-            className="w-full h-full object-cover"
+            muted
+            className="w-full h-full object-cover transform scale-x-[-1]"
+            style={{ transform: 'scaleX(-1)' }}
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="absolute inset-4 border-2 border-white/50 rounded-lg"></div>
-            <p className="absolute top-6 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded">
-              Position cow nose in frame
-            </p>
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-4 border-2 border-white/70 rounded-lg"></div>
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-3 py-1 rounded">
+              📸 Position cow nose in frame
+            </div>
           </div>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
-            <Button onClick={capturePhoto} size="lg" className="bg-white text-black hover:bg-gray-100">
+            <Button 
+              onClick={capturePhoto} 
+              size="lg" 
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            >
               <Camera className="h-5 w-5 mr-2" />
-              Capture Photo
+              Capture
             </Button>
-            <Button onClick={stopCamera} variant="outline" size="lg" className="bg-black/50 text-white border-white/50 hover:bg-black/70">
+            <Button 
+              onClick={stopCamera} 
+              variant="outline" 
+              size="lg" 
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+            >
               Cancel
             </Button>
           </div>
