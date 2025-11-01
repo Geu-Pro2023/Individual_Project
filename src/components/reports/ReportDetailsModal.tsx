@@ -7,10 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { reportsAPI } from "@/services/api";
+import { RefreshCw } from "lucide-react";
 
 interface ReportDetailsModalProps {
   open: boolean;
   onClose: () => void;
+  onReportUpdated?: () => void;
   report?: {
     id: string;
     reporter: {
@@ -27,15 +30,15 @@ interface ReportDetailsModalProps {
   };
 }
 
-export const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) => {
-  const [response, setResponse] = useState("");
+export const ReportDetailsModal = ({ open, onClose, onReportUpdated, report }: ReportDetailsModalProps) => {
+  const [response, setResponse] = useState("Thank you for your report. We have reviewed the information and taken appropriate action. If you have any further concerns, please don't hesitate to contact us.");
   const [status, setStatus] = useState<string>("pending");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (report) {
       setStatus(report.status);
-      setResponse(""); // Reset response when opening new report
+      // Keep default response template
     }
   }, [report]);
 
@@ -49,14 +52,14 @@ export const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModal
     
     setSending(true);
     try {
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const reportId = parseInt(report?.id.replace('RPT-', '') || '0');
+      await reportsAPI.reply(reportId, response, status);
       
       toast.success("Response sent successfully!");
-      setResponse("");
+      onReportUpdated?.(); // Refresh reports list
       onClose();
-    } catch (error) {
-      toast.error("Failed to send response");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send response");
     } finally {
       setSending(false);
     }
@@ -82,9 +85,19 @@ export const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModal
                 {report.status.toUpperCase()}
               </Badge>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => onReportUpdated?.()} 
+                title="Refresh"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 

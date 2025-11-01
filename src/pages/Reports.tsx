@@ -65,9 +65,26 @@ const Reports = () => {
   }, []);
 
   const fetchReports = async () => {
+    setLoading(true);
     try {
       const data = await reportsAPI.getAll();
-      setReports(data.reports || []);
+      if (data.reports && data.reports.length > 0) {
+        setReports(data.reports);
+      } else {
+        // Use mock data when no reports available (for demo purposes)
+        setReports(mockReports.map(report => ({
+          id: report.id.split('-')[1],
+          created_at: report.date,
+          reporter_name: report.reporter.name,
+          reporter_phone: report.reporter.phone,
+          reporter_email: report.reporter.email,
+          report_type: report.type,
+          cow_tag: report.cow,
+          status: report.status,
+          location: report.location,
+          message: report.description
+        })));
+      }
     } catch (error) {
       // Use mock data when API fails (for demo purposes)
       setReports(mockReports.map(report => ({
@@ -119,11 +136,17 @@ const Reports = () => {
   }
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Reports Management</h1>
-        <p className="text-muted-foreground mt-1">
-          Review and manage submitted reports
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Get all Reports</h1>
+          <p className="text-muted-foreground mt-1">
+            Review and manage submitted reports
+          </p>
+        </div>
+        <Button onClick={fetchReports} disabled={loading}>
+          <Eye className="h-4 w-4 mr-2" />
+          {loading ? 'Loading...' : 'Refresh Reports'}
+        </Button>
       </div>
 
       <Card className="shadow-card">
@@ -200,6 +223,7 @@ const Reports = () => {
       <ReportDetailsModal 
         open={detailsModalOpen}
         onClose={() => setDetailsModalOpen(false)}
+        onReportUpdated={fetchReports}
         report={selectedReport}
       />
     </div>
