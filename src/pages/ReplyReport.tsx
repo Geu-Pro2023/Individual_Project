@@ -35,10 +35,10 @@ const ReplyReport = () => {
       console.log('Reports array:', reports);
       
       if (reports && reports.length > 0) {
-        console.log('Available reports:', reports.map((r: any) => ({ id: r.id, type: typeof r.id })));
+        console.log('Available reports:', reports.map((r: any) => ({ report_id: r.report_id, type: typeof r.report_id })));
         const foundReport = reports.find((r: any) => 
-          r.id.toString() === reportId || 
-          r.id === parseInt(reportId)
+          r.report_id.toString() === reportId || 
+          r.report_id === parseInt(reportId)
         );
         
         if (foundReport) {
@@ -78,7 +78,7 @@ const ReplyReport = () => {
 
     setLoading(true);
     try {
-      await reportsAPI.reply(report.id, adminReply, status);
+      await reportsAPI.reply(report.report_id, adminReply, status);
       toast.success("Reply sent successfully!");
       
       // Reset form
@@ -128,7 +128,7 @@ const ReplyReport = () => {
         <Card className="shadow-card max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              📢 Report #{report.id}
+              📢 Report #{report.report_id}
               <Badge className={`${
                 report.status === "pending" ? "bg-red-100 text-red-800" :
                 report.status === "resolved" ? "bg-green-100 text-green-800" :
