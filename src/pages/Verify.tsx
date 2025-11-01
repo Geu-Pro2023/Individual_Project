@@ -4,10 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search } from "lucide-react";
+import { Search, Camera, Fingerprint, Tag } from "lucide-react";
 import { ImageCapture } from "@/components/ui/image-capture";
-import { VerificationResults } from "@/components/verification/VerificationResults";
-import { GPSTracker } from "@/components/ui/gps-tracker";
 import { verificationAPI } from "@/services/api";
 import { toast } from "sonner";
 
@@ -16,7 +14,7 @@ const Verify = () => {
   const [cowTag, setCowTag] = useState("");
   const [nosePrintImage, setNosePrintImage] = useState<File | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<any>(null);
+
   const [showImageModal, setShowImageModal] = useState(false);
 
   const handleNosePrintVerify = async () => {
@@ -165,59 +163,68 @@ const Verify = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Verification Center</h1>
+        <h1 className="text-3xl font-bold text-foreground">Verify Cow</h1>
         <p className="text-muted-foreground mt-1">
-          Verify cattle using nose print or tag lookup with GPS location tracking
+          Verify cattle using different methods: tag lookup, nose print, or camera
         </p>
       </div>
 
-      <Tabs defaultValue="noseprint" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="noseprint">Nose Print Verification</TabsTrigger>
-          <TabsTrigger value="tag">Tag Lookup</TabsTrigger>
+      <Tabs defaultValue="tag" className="w-full">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+          <TabsTrigger value="tag" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Verify by Cow Tag
+          </TabsTrigger>
+          <TabsTrigger value="noseprint" className="flex items-center gap-2">
+            <Fingerprint className="h-4 w-4" />
+            Verify by Nose Print
+          </TabsTrigger>
+          <TabsTrigger value="camera" className="flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            Verify using Camera
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="noseprint" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Upload Nose Print Image</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Upload a clear image of the cow's nose print for verification
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="max-w-md mx-auto">
-                  <ImageCapture
-                    label="Nose Print"
-                    onImageCapture={(file) => setNosePrintImage(file)}
-                  />
-                </div>
-                <Button size="lg" className="w-full" onClick={handleNosePrintVerify} disabled={verifying}>
-                  <Search className="mr-2 h-4 w-4" />
-                  {verifying ? 'Verifying...' : 'Verify Nose Print'}
-                </Button>
-              </CardContent>
-            </Card>
-            
-            <GPSTracker 
-              onLocationUpdate={(location) => setCurrentLocation(location)}
-              showMap={true}
-            />
-          </div>
+          <Card className="shadow-card max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Fingerprint className="h-5 w-5" />
+                Nose Print Verification
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Upload a clear image of the cow's nose print for verification
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="max-w-md mx-auto">
+                <ImageCapture
+                  label="Nose Print Image"
+                  onImageCapture={(file) => setNosePrintImage(file)}
+                />
+              </div>
+              <Button size="lg" className="w-full" onClick={handleNosePrintVerify} disabled={verifying}>
+                <Fingerprint className="mr-2 h-4 w-4" />
+                {verifying ? 'Verifying...' : 'Verify Nose Print'}
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="tag" className="mt-6">
-          <Card className="shadow-card">
+          <Card className="shadow-card max-w-2xl mx-auto">
             <CardHeader>
-              <CardTitle>Tag Lookup</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Verify by Cow Tag
+              </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Enter the cow tag to retrieve information
+                Enter the cow tag to retrieve and verify information
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="cowTag">Cow Tag</Label>
+                <Label htmlFor="cowTag">Cow Tag *</Label>
                 <Input
                   id="cowTag"
                   placeholder="TW-2025-XXX-XXXX"
@@ -226,15 +233,35 @@ const Verify = () => {
                   onChange={(e) => setCowTag(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tagLocation" className="text-xs">
-                  Location (Optional)
-                </Label>
-                <Input id="tagLocation" placeholder="GPS coordinates or address" />
-              </div>
               <Button size="lg" className="w-full" onClick={handleTagLookup} disabled={verifying}>
-                <Search className="mr-2 h-4 w-4" />
-                {verifying ? 'Looking up...' : 'Lookup Tag'}
+                <Tag className="mr-2 h-4 w-4" />
+                {verifying ? 'Verifying...' : 'Verify by Tag'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="camera" className="mt-6">
+          <Card className="shadow-card max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Verify using Camera
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Take a live photo of the cow for verification
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="max-w-md mx-auto">
+                <ImageCapture
+                  label="Live Camera Photo"
+                  onImageCapture={(file) => setNosePrintImage(file)}
+                />
+              </div>
+              <Button size="lg" className="w-full" onClick={handleNosePrintVerify} disabled={verifying}>
+                <Camera className="mr-2 h-4 w-4" />
+                {verifying ? 'Verifying...' : 'Verify using Camera'}
               </Button>
             </CardContent>
           </Card>
