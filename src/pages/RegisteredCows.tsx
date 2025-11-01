@@ -1,13 +1,131 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Phone, Mail, Download } from "lucide-react";
+import { RefreshCw, Phone, Mail, Download, Search, QrCode, Receipt, Eye, Edit, ArrowUpDown } from "lucide-react";
 import { cattleAPI, ownersAPI } from "@/services/api";
+import { toast } from "sonner";
 
 const RegisteredCows = () => {
   const [cows, setCows] = useState<any[]>([]);
+  const [filteredCows, setFilteredCows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [breedFilter, setBreedFilter] = useState("");
+  const [sortField, setSortField] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Filter and search functionality
+  useEffect(() => {
+    let filtered = cows.filter(cow => {
+      const matchesSearch = 
+        (cow.cow_tag || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (cow.owner_full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (cow.breed || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesBreed = !breedFilter || cow.breed === breedFilter;
+      
+      return matchesSearch && matchesBreed;
+    });
+
+    // Apply sorting
+    if (sortField) {
+      filtered.sort((a, b) => {
+        let aVal = a[sortField] || '';
+        let bVal = b[sortField] || '';
+        
+        if (sortField === 'registered_at') {
+          aVal = new Date(aVal).getTime();
+          bVal = new Date(bVal).getTime();
+        }
+        
+        if (sortOrder === 'asc') {
+          return aVal > bVal ? 1 : -1;
+        } else {
+          return aVal < bVal ? 1 : -1;
+        }
+      });
+    }
+
+    setFilteredCows(filtered);
+  }, [cows, searchTerm, breedFilter, sortField, sortOrder]);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const handleViewQR = async (cowTag: string) => {
+    try {
+      window.open(`https://titweng.app/verify/${cowTag}`, '_blank');
+    } catch (error) {
+      toast.error('Failed to open QR code');
+    }
+  };
+
+  const handleDownloadReceipt = async (cowTag: string) => {
+    try {
+      const response = await fetch(`https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/receipt/${cowTag}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${cowTag}_receipt.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        toast.success('Receipt downloaded successfully');
+      } else {
+        toast.error('Failed to download receipt');
+      }
+    } catch (error) {
+      toast.error('Failed to download receipt');
+    }
+  };
+
+  const handleViewFace = async (cowTag: string) => {
+    try {
+      window.open(`https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/cow/${cowTag}/face`, '_blank');
+    } catch (error) {
+      toast.error('Failed to view cow face');
+    }
+  };
+
+  const getUniqueBreeds = () => {
+    return [...new Set(cows.map(cow => cow.breed).filter(Boolean))];
+  };
+
+  const getStats = () => {
+    const total = cows.length;
+    const breedCounts = cows.reduce((acc, cow) => {
+      const breed = cow.breed || 'Unknown';
+      acc[breed] = (acc[breed] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const recentCount = cows.filter(cow => {
+      if (!cow.registered_at) return false;
+      const regDate = new Date(cow.registered_at);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return regDate > weekAgo;
+    }).length;
+
+    return { total, breedCounts, recentCount };
+  };
+
+  const stats = getStats();
 
   const exportToCSV = () => {
     const headers = [
@@ -23,7 +141,7 @@ const RegisteredCows = () => {
       'Registration Date'
     ];
     
-    const csvData = cows.map(cow => [
+    const csvData = filteredCows.map(cow => [
       cow.cow_tag || 'N/A',
       cow.owner_full_name || 'N/A',
       cow.owner_phone || 'N/A', 
@@ -88,6 +206,7 @@ const RegisteredCows = () => {
       });
       
       setCows(combinedData);
+      setFilteredCows(combinedData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       setCows([]);
@@ -110,12 +229,80 @@ const RegisteredCows = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             {loading ? 'Loading...' : 'Refresh'}
           </Button>
-          <Button onClick={exportToCSV} disabled={cows.length === 0} variant="outline">
+          <Button onClick={exportToCSV} disabled={filteredCows.length === 0} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export CSV
+            Export CSV ({filteredCows.length})
           </Button>
         </div>
       </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Cows</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Recent (7 days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.recentCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Top Breed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-semibold">
+              {Object.entries(stats.breedCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Filtered Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{filteredCows.length}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search and Filter */}
+      <Card className="shadow-card">
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by cow tag, owner name, or breed..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={breedFilter} onValueChange={setBreedFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Filter by breed" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Breeds</SelectItem>
+                {getUniqueBreeds().map(breed => (
+                  <SelectItem key={breed} value={breed}>{breed}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="shadow-card">
         <CardContent className="p-0">
@@ -123,33 +310,54 @@ const RegisteredCows = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[120px]">Cow Tag</TableHead>
-                  <TableHead className="min-w-[150px]">Owner Name</TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <Button variant="ghost" onClick={() => handleSort('cow_tag')} className="h-auto p-0 font-semibold">
+                      Cow Tag <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="min-w-[150px]">
+                    <Button variant="ghost" onClick={() => handleSort('owner_full_name')} className="h-auto p-0 font-semibold">
+                      Owner Name <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
                   <TableHead className="min-w-[130px]">Owner Phone</TableHead>
                   <TableHead className="min-w-[180px]">Owner Email</TableHead>
                   <TableHead className="min-w-[200px]">Owner Address</TableHead>
                   <TableHead className="min-w-[120px]">National ID</TableHead>
-                  <TableHead className="min-w-[100px]">Breed</TableHead>
+                  <TableHead className="min-w-[100px]">
+                    <Button variant="ghost" onClick={() => handleSort('breed')} className="h-auto p-0 font-semibold">
+                      Breed <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
                   <TableHead className="min-w-[80px]">Color</TableHead>
-                  <TableHead className="min-w-[60px]">Age</TableHead>
-                  <TableHead className="min-w-[120px]">Registration Date</TableHead>
+                  <TableHead className="min-w-[60px]">
+                    <Button variant="ghost" onClick={() => handleSort('age')} className="h-auto p-0 font-semibold">
+                      Age <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <Button variant="ghost" onClick={() => handleSort('registered_at')} className="h-auto p-0 font-semibold">
+                      Registration Date <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                       Loading registered cows...
                     </TableCell>
                   </TableRow>
-                ) : cows.length === 0 ? (
+                ) : filteredCows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                      No cows registered yet.
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                      {cows.length === 0 ? 'No cows registered yet.' : 'No cows match your search criteria.'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  cows.map((cow) => (
+                  filteredCows.map((cow) => (
                     <TableRow key={cow.cow_id || cow.id}>
                       <TableCell className="font-mono font-bold text-primary whitespace-nowrap">
                         {cow.cow_tag || 'N/A'}
@@ -180,6 +388,34 @@ const RegisteredCows = () => {
                       <TableCell>{cow.age || 'N/A'}</TableCell>
                       <TableCell className="text-sm">
                         {cow.registered_at ? new Date(cow.registered_at).toLocaleDateString() : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => handleViewQR(cow.cow_tag)}
+                            title="View QR Code"
+                          >
+                            <QrCode className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => handleDownloadReceipt(cow.cow_tag)}
+                            title="Download Receipt"
+                          >
+                            <Receipt className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => handleViewFace(cow.cow_tag)}
+                            title="View Cow Face"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
