@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 interface ReportDetailsModalProps {
@@ -29,17 +29,37 @@ interface ReportDetailsModalProps {
 
 export const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) => {
   const [response, setResponse] = useState("");
-  const [status, setStatus] = useState<string>(report?.status || "pending");
+  const [status, setStatus] = useState<string>("pending");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (report) {
+      setStatus(report.status);
+      setResponse(""); // Reset response when opening new report
+    }
+  }, [report]);
 
   if (!report) return null;
 
-  const handleSendResponse = () => {
+  const handleSendResponse = async () => {
     if (!response.trim()) {
       toast.error("Please enter a response");
       return;
     }
-    toast.success("Response sent successfully!");
-    onClose();
+    
+    setSending(true);
+    try {
+      // Simulate API call - replace with actual API endpoint
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success("Response sent successfully!");
+      setResponse("");
+      onClose();
+    } catch (error) {
+      toast.error("Failed to send response");
+    } finally {
+      setSending(false);
+    }
   };
 
   const statusColor = {
@@ -145,8 +165,12 @@ export const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModal
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleSendResponse} className="mt-6">
-                  Send Response
+                <Button 
+                  onClick={handleSendResponse} 
+                  className="mt-6" 
+                  disabled={sending || !response.trim()}
+                >
+                  {sending ? "Sending..." : "Send Response"}
                 </Button>
               </div>
             </div>

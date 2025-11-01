@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { useTranslation } from "@/lib/translations";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [cowTag, setCowTag] = useState("");
   const [nosePrintImages, setNosePrintImages] = useState<{[key: string]: File}>({});
   const [facialImage, setFacialImage] = useState<File | null>(null);
@@ -97,20 +99,10 @@ const Register = () => {
       }).then(res => res.json());
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
-      // Reset form
-      setFormData({
-        owner_full_name: '',
-        owner_email: '',
-        owner_phone: '',
-        owner_address: '',
-        owner_national_id: '',
-        breed: '',
-        color: '',
-        age: '',
-      });
-      setNosePrintImages({});
-      setFacialImage(null);
-      fetchTagInfo(); // Get new tag
+      // Redirect to cattle page after successful registration
+      setTimeout(() => {
+        navigate('/cattle');
+      }, 2000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to register cattle');
     } finally {
