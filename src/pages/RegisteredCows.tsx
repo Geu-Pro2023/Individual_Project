@@ -2,12 +2,52 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Phone, Mail } from "lucide-react";
+import { RefreshCw, Phone, Mail, Download } from "lucide-react";
 import { cattleAPI, ownersAPI } from "@/services/api";
 
 const RegisteredCows = () => {
   const [cows, setCows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const exportToCSV = () => {
+    const headers = [
+      'Cow Tag',
+      'Owner Name', 
+      'Owner Phone',
+      'Owner Email',
+      'Owner Address',
+      'National ID',
+      'Breed',
+      'Color', 
+      'Age',
+      'Registration Date'
+    ];
+    
+    const csvData = cows.map(cow => [
+      cow.cow_tag || 'N/A',
+      cow.owner_full_name || 'N/A',
+      cow.owner_phone || 'N/A', 
+      cow.owner_email || 'N/A',
+      cow.owner_address || 'N/A',
+      cow.owner_national_id || 'N/A',
+      cow.breed || 'N/A',
+      cow.color || 'N/A',
+      cow.age || 'N/A',
+      cow.registered_at ? new Date(cow.registered_at).toLocaleDateString() : 'N/A'
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `registered-cows-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     fetchCows();
@@ -65,10 +105,16 @@ const RegisteredCows = () => {
             Complete details of all registered cows and their owners
           </p>
         </div>
-        <Button onClick={fetchCows} disabled={loading}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {loading ? 'Loading...' : 'Refresh'}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={fetchCows} disabled={loading}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {loading ? 'Loading...' : 'Refresh'}
+          </Button>
+          <Button onClick={exportToCSV} disabled={cows.length === 0} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <Card className="shadow-card">
