@@ -83,7 +83,7 @@ const VerificationLogs = () => {
                         {log.cow_tag || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        {log.similarity_score ? `${(log.similarity_score * 100).toFixed(1)}%` : 'N/A'}
+                        {log.similarity_score !== null && log.similarity_score !== undefined ? `${(log.similarity_score * 100).toFixed(4)}%` : 'N/A'}
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${
