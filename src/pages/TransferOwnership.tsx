@@ -895,7 +895,6 @@ const TransferOwnership = () => {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
     </>
   );
 };
