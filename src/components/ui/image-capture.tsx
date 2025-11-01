@@ -24,47 +24,91 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
     setIsLoading(true);
     setCameraError("");
     
+    // Check if camera is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setIsLoading(false);
+      setCameraError("Camera not supported in this browser. Please use upload instead.");
+      return;
+    }
+    
     // Stop existing stream
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
     
+    try {
+      // Check permissions first
+      const permission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+      console.log('Camera permission:', permission.state);
+      
+      if (permission.state === 'denied') {
+        setIsLoading(false);
+        setCameraError("Camera permission denied. Please enable camera access in browser settings and refresh the page.");
+        return;
+      }
+    } catch (e) {
+      console.log('Permission check failed, continuing anyway');
+    }
+    
     const constraints = [
-      // Try preferred camera first
-      { video: { facingMode: preferredFacing } },
-      // Fallback to any camera
       { video: true },
-      // Last resort - basic video
-      { video: { width: 640, height: 480 } }
+      { video: { facingMode: preferredFacing } },
+      { video: { width: 320, height: 240 } }
     ];
     
-    for (const constraint of constraints) {
+    for (let i = 0; i < constraints.length; i++) {
       try {
-        console.log('Trying constraint:', constraint);
-        const newStream = await navigator.mediaDevices.getUserMedia(constraint);
+        console.log(`Trying constraint ${i + 1}:`, constraints[i]);
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints[i]);
         
-        if (videoRef.current) {
+        console.log('Stream obtained:', newStream);
+        console.log('Video tracks:', newStream.getVideoTracks());
+        
+        if (videoRef.current && newStream.getVideoTracks().length > 0) {
           videoRef.current.srcObject = newStream;
           setStream(newStream);
           setFacingMode(preferredFacing);
           
-          // Simple approach - just show after stream is set
-          setTimeout(() => {
+          // Wait for video to be ready
+          videoRef.current.onloadeddata = () => {
+            console.log('Video loaded, showing camera');
             setIsCapturing(true);
             setIsLoading(false);
-          }, 500);
+          };
+          
+          // Fallback timeout
+          setTimeout(() => {
+            if (isLoading) {
+              console.log('Timeout fallback - showing camera');
+              setIsCapturing(true);
+              setIsLoading(false);
+            }
+          }, 2000);
           
           return; // Success!
         }
-      } catch (error) {
-        console.log('Constraint failed:', constraint, error);
+      } catch (error: any) {
+        console.log(`Constraint ${i + 1} failed:`, error.name, error.message);
+        
+        if (error.name === 'NotAllowedError') {
+          setIsLoading(false);
+          setCameraError("Camera access denied. Please click 'Allow' when browser asks for camera permission.");
+          return;
+        }
+        
+        if (error.name === 'NotFoundError') {
+          setIsLoading(false);
+          setCameraError("No camera found on this device. Please use upload instead.");
+          return;
+        }
+        
         continue; // Try next constraint
       }
     }
     
     // All constraints failed
     setIsLoading(false);
-    setCameraError("Camera not available. Please use upload instead or check camera permissions.");
+    setCameraError("Camera initialization failed. Please refresh the page and try again, or use upload instead.");
   };
   
   const switchCamera = () => {
@@ -166,11 +210,16 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
       {cameraError && (
         <div className="aspect-square rounded-lg bg-red-50 border-2 border-red-200 flex items-center justify-center">
           <div className="text-center p-4">
-            <p className="text-red-600 font-medium mb-2">Camera Error</p>
+            <p className="text-red-600 font-medium mb-2">📷 Camera Issue</p>
             <p className="text-sm text-red-500 mb-3">{cameraError}</p>
-            <Button onClick={startCamera} variant="outline" size="sm">
-              Try Again
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => startCamera()} variant="outline" size="sm">
+                Try Again
+              </Button>
+              <Button onClick={() => fileInputRef.current?.click()} size="sm">
+                Upload Instead
+              </Button>
+            </div>
           </div>
         </div>
       )}
