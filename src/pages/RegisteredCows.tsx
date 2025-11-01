@@ -62,22 +62,43 @@ const RegisteredCows = () => {
 
   const handleViewFace = async (cowTag: string) => {
     try {
+      console.log('Fetching face for cow:', cowTag);
       const response = await fetch(`https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/cow/${cowTag}/face`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
         },
       });
       
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers.get('content-type'));
+      
       if (response.ok) {
-        const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
-        setSelectedCowFace({ tag: cowTag, image: imageUrl });
-        setFaceModalOpen(true);
-        toast.success('Cow face image loaded');
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.startsWith('image/')) {
+          // It's an actual image
+          const blob = await response.blob();
+          const imageUrl = URL.createObjectURL(blob);
+          setSelectedCowFace({ tag: cowTag, image: imageUrl });
+          setFaceModalOpen(true);
+          toast.success('Cow face image loaded');
+        } else {
+          // It's JSON data
+          const data = await response.json();
+          console.log('Face data:', data);
+          if (data.facial_image_url) {
+            setSelectedCowFace({ tag: cowTag, image: data.facial_image_url });
+            setFaceModalOpen(true);
+            toast.success('Cow face image loaded');
+          } else {
+            toast.error('No facial image available for this cow');
+          }
+        }
       } else {
         toast.error('No facial image available for this cow');
       }
     } catch (error) {
+      console.error('Face fetch error:', error);
       toast.error('Failed to view cow face');
     }
   };
