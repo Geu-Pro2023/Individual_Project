@@ -71,38 +71,34 @@ const VerificationLogs = () => {
                   </TableRow>
                 ) : (
                   logs.map((log, index) => (
-                    <TableRow key={log.id || index}>
+                    <TableRow key={log.log_id || index}>
                       <TableCell className="text-sm">
-                        {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A'}
+                        {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
                       </TableCell>
                       <TableCell className="font-mono font-semibold text-primary">
                         {log.cow_tag || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          log.method === 'nose_print' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {log.method === 'nose_print' ? '👃 Nose Print' : '🏷️ Tag'}
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+                          🔍 Verification
                         </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {log.verified ? (
+                          {log.verified === 'yes' ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />
                           ) : (
                             <XCircle className="h-4 w-4 text-red-600" />
                           )}
                           <span className={`font-medium ${
-                            log.verified ? 'text-green-600' : 'text-red-600'
+                            log.verified === 'yes' ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {log.verified ? 'Verified' : 'Failed'}
+                            {log.verified === 'yes' ? 'Verified' : 'Failed'}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {log.similarity ? `${(log.similarity * 100).toFixed(1)}%` : 'N/A'}
+                        {log.similarity_score ? `${(log.similarity_score * 100).toFixed(1)}%` : 'N/A'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {log.location || 'N/A'}
