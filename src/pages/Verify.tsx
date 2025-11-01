@@ -169,15 +169,15 @@ const Verify = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="tag" className="w-full">
+      <Tabs defaultValue="noseprint" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="tag" className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-            Verify by Cow Tag
-          </TabsTrigger>
           <TabsTrigger value="noseprint" className="flex items-center gap-2">
             <Fingerprint className="h-4 w-4" />
             Verify by Nose Print
+          </TabsTrigger>
+          <TabsTrigger value="tag" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Verify by Cow Tag
           </TabsTrigger>
         </TabsList>
 
