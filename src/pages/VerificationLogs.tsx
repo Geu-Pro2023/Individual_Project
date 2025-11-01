@@ -158,7 +158,11 @@ const VerificationLogs = () => {
   };
 
   const handleDeleteLog = async (logId: number) => {
-    if (!confirm('Are you sure you want to delete this verification log?')) {
+    const logToDelete = logs.find(log => log.log_id === logId);
+    const cowTag = logToDelete?.cow_tag || 'Unknown';
+    const date = logToDelete?.created_at ? new Date(logToDelete.created_at).toLocaleDateString() : 'Unknown date';
+    
+    if (!confirm(`Delete verification log for cow ${cowTag} from ${date}?\n\nThis action cannot be undone and will permanently remove this verification record from the system.`)) {
       return;
     }
     
@@ -167,9 +171,9 @@ const VerificationLogs = () => {
       // Note: You'll need to add this endpoint to your FastAPI backend
       // await verificationAPI.deleteLog(logId);
       
-      // For now, just remove from local state
+      // Remove from local state
       setLogs(prev => prev.filter(log => log.log_id !== logId));
-      toast.success('Verification log deleted successfully');
+      toast.success(`Verification log for cow ${cowTag} has been permanently deleted from the system`);
     } catch (error) {
       console.error('Failed to delete log:', error);
       toast.error('Failed to delete verification log');
