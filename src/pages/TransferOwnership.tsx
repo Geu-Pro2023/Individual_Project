@@ -58,13 +58,26 @@ const TransferOwnership = () => {
         return;
       }
 
+      // Ensure cow has required ID field
+      if (!cow.cow_id && !cow.id) {
+        toast.error("Cow ID not found - cannot transfer");
+        setCurrentOwner(null);
+        return;
+      }
+
       // Find current owner
       const ownersData = await ownersAPI.getAll();
       const owner = ownersData.owners?.find((o: any) => o.full_name === cow.owner_name);
       
       setCurrentOwner({
-        cow: cow,
-        owner: owner || { full_name: cow.owner_name, phone: cow.owner_phone || 'N/A' }
+        cow: {
+          ...cow,
+          // Ensure we have all required fields with defaults
+          breed: cow.breed || 'Unknown',
+          color: cow.color || 'Unknown',
+          age: cow.age || '0'
+        },
+        owner: owner || { full_name: cow.owner_name, phone: cow.owner_phone || 'N/A', email: 'N/A' }
       });
       
       toast.success("Cow found successfully");
@@ -101,7 +114,11 @@ const TransferOwnership = () => {
         toast.error("Please fill in all required fields for new owner");
         return;
       }
-      newOwner = newOwnerData;
+      newOwner = {
+        ...newOwnerData,
+        // Ensure email field exists even if empty
+        email: newOwnerData.email || ''
+      };
     }
 
     setTransferData({
@@ -133,8 +150,14 @@ const TransferOwnership = () => {
 
       console.log('Transfer payload:', transferPayload);
       console.log('Cow ID:', transferData.cow.cow_id || transferData.cow.id);
+      console.log('Using cow data:', transferData.cow);
       
-      const result = await cattleAPI.transfer(transferData.cow.cow_id || transferData.cow.id, transferPayload);
+      const cowId = transferData.cow.cow_id || transferData.cow.id;
+      if (!cowId) {
+        throw new Error('Cow ID is required for transfer');
+      }
+      
+      const result = await cattleAPI.transfer(cowId, transferPayload);
       console.log('Transfer result:', result);
       
       // Show success message
@@ -256,6 +279,7 @@ const TransferOwnership = () => {
                   <p><strong>Current Owner:</strong> {currentOwner.owner.full_name}</p>
                   <p><strong>Phone:</strong> {currentOwner.owner.phone || 'N/A'}</p>
                   <p><strong>Email:</strong> {currentOwner.owner.email || 'N/A'}</p>
+                  <p><strong>Cow ID:</strong> {currentOwner.cow.cow_id || currentOwner.cow.id || 'N/A'}</p>
                 </div>
               </div>
             </div>
