@@ -30,14 +30,14 @@ export const cattleAPI = {
     return apiClient.postForm('/admin/register-cow', formData);
   },
   update: (id: string, data: any) => apiClient.put(`/admin/cows/${id}`, data),
-  transfer: (id: string, data: any) => {
+  transfer: (cowTag: string, data: any) => {
     const formData = new FormData();
     Object.keys(data).forEach(key => {
       if (data[key] !== null && data[key] !== undefined) {
         formData.append(key, data[key]);
       }
     });
-    return apiClient.postForm(`/admin/cows/${id}/transfer`, formData);
+    return apiClient.postForm(`/admin/cow/${cowTag}/transfer`, formData);
   },
   delete: (cowTag: string) => apiClient.delete(`/admin/cow/${cowTag}/delete`),
   deleteWithDetails: (cowTag: string) => apiClient.delete(`/admin/cow/${cowTag}/delete-full`),
