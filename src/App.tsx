@@ -23,6 +23,7 @@ import UpdateCow from "./pages/UpdateCow";
 import DeleteCow from "./pages/DeleteCow";
 import DownloadReceipt from "./pages/DownloadReceipt";
 import ViewCowFace from "./pages/ViewCowFace";
+import Users from "./pages/Users";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => {
             <Route path="/delete-cow" element={<ProtectedRoute><DashboardLayout><DeleteCow /></DashboardLayout></ProtectedRoute>} />
             <Route path="/download-receipt" element={<ProtectedRoute><DashboardLayout><DownloadReceipt /></DashboardLayout></ProtectedRoute>} />
             <Route path="/view-cow-face" element={<ProtectedRoute><DashboardLayout><ViewCowFace /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><DashboardLayout><Users /></DashboardLayout></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

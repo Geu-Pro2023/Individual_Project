@@ -56,8 +56,9 @@ export const Sidebar = ({
     {
       title: "System",
       items: [
-        { name: "System Tools", href: "/system", icon: Database },
-        { name: "Settings", href: "/settings", icon: Settings },
+        { name: "System Health", href: "/system", icon: Database },
+        { name: "Admin Settings", href: "/settings", icon: Settings },
+        { name: "User Management", href: "/users", icon: UserCheck },
       ]
     }
   ];
@@ -152,11 +153,7 @@ export const Sidebar = ({
             <LogOut className="h-4 w-4" />
             {(!isCollapsed || isMobile) && <span className="ml-2">{t('logout')}</span>}
           </Button>
-          {(!isCollapsed || isMobile) && (
-            <p className="text-xs text-sidebar-foreground/60 text-center">
-              Titweng Admin v1.0
-            </p>
-          )}
+
         </div>
       </div>
     </aside>

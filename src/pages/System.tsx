@@ -82,9 +82,9 @@ const System = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">System Tools</h1>
+        <h1 className="text-2xl font-bold text-foreground">System Health & Administration</h1>
         <p className="text-muted-foreground mt-1">
-          System administration and maintenance tools
+          Monitor system status, test configurations, and perform maintenance tasks
         </p>
       </div>
 
