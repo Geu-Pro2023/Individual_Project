@@ -170,7 +170,7 @@ const Verify = () => {
       </div>
 
       <Tabs defaultValue="tag" className="w-full">
-        <TabsList className="grid w-full max-w-xl grid-cols-2">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="tag" className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             Verify by Cow Tag
@@ -182,7 +182,7 @@ const Verify = () => {
         </TabsList>
 
         <TabsContent value="noseprint" className="mt-6">
-          <Card className="shadow-card max-w-2xl mx-auto">
+          <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Fingerprint className="h-5 w-5" />
@@ -193,13 +193,13 @@ const Verify = () => {
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="max-w-md mx-auto">
+              <div className="max-w-md">
                 <ImageCapture
                   label="Nose Print Image"
                   onImageCapture={(file) => setNosePrintImage(file)}
                 />
               </div>
-              <Button size="lg" className="w-full" onClick={handleNosePrintVerify} disabled={verifying}>
+              <Button size="lg" onClick={handleNosePrintVerify} disabled={verifying}>
                 <Fingerprint className="mr-2 h-4 w-4" />
                 {verifying ? 'Verifying...' : 'Verify Nose Print'}
               </Button>
@@ -208,7 +208,7 @@ const Verify = () => {
         </TabsContent>
 
         <TabsContent value="tag" className="mt-6">
-          <Card className="shadow-card max-w-2xl mx-auto">
+          <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Tag className="h-5 w-5" />
@@ -219,7 +219,7 @@ const Verify = () => {
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-2 max-w-md">
                 <Label htmlFor="cowTag">Cow Tag *</Label>
                 <Input
                   id="cowTag"
@@ -229,7 +229,7 @@ const Verify = () => {
                   onChange={(e) => setCowTag(e.target.value)}
                 />
               </div>
-              <Button size="lg" className="w-full" onClick={handleTagLookup} disabled={verifying}>
+              <Button size="lg" onClick={handleTagLookup} disabled={verifying}>
                 <Tag className="mr-2 h-4 w-4" />
                 {verifying ? 'Verifying...' : 'Verify by Tag'}
               </Button>
