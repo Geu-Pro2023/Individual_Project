@@ -119,29 +119,32 @@ const TransferOwnership = () => {
     setShowConfirmModal(false);
 
     try {
-      const transferPayload = useExistingOwner 
-        ? { new_owner_id: selectedExistingOwner }
-        : newOwnerData;
+      // Prepare transfer payload with all required fields
+      const transferPayload = {
+        new_owner_full_name: transferData.newOwner.full_name,
+        new_owner_email: transferData.newOwner.email || '',
+        new_owner_phone: transferData.newOwner.phone || '',
+        new_owner_address: transferData.newOwner.address || '',
+        new_owner_national_id: transferData.newOwner.national_id || '',
+        breed: transferData.cow.breed || '',
+        color: transferData.cow.color || '',
+        age: transferData.cow.age || ''
+      };
 
       console.log('Transfer payload:', transferPayload);
-      console.log('Cow tag:', transferData.cow.cow_tag);
+      console.log('Cow ID:', transferData.cow.cow_id || transferData.cow.id);
       
-      const result = await cattleAPI.transfer(transferData.cow.cow_tag, transferPayload);
+      const result = await cattleAPI.transfer(transferData.cow.cow_id || transferData.cow.id, transferPayload);
       console.log('Transfer result:', result);
       
       // Show success message
       toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
       
-      // Check if we need to send email separately
-      if (transferData.newOwner.email) {
-        try {
-          // Try to send email using test email endpoint as fallback
-          await systemAPI.sendTestEmail(transferData.newOwner.email);
-          toast.info(`📧 Transfer notification sent to ${transferData.newOwner.email}`);
-        } catch (emailError) {
-          console.log('Email sending failed:', emailError);
-          toast.warning('Transfer completed but email notification failed');
-        }
+      // Check API response for email status
+      if (result.email_sent) {
+        toast.info(`📧 Transfer receipt sent to ${transferData.newOwner.email}`);
+      } else {
+        toast.warning('Transfer completed but email sending failed');
       }
       
       // Show receipt download option
