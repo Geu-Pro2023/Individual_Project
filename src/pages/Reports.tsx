@@ -25,7 +25,7 @@ const mockReports = [
     status: "pending" as const, 
     cow: "TW-2025-HLS-0156",
     submittedAt: "Oct 23, 2025 at 09:15",
-    location: "Kigali Central",
+    location: "Juba Central",
     description: "There is a dispute about the ownership of this cattle between two parties."
   },
   { 

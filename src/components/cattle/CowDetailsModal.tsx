@@ -186,7 +186,7 @@ export const CowDetailsModal = ({ open, onClose, cow }: CowDetailsModalProps) =>
           <h3 className="font-semibold text-lg mb-4">Recent Verifications</h3>
           <div className="space-y-3">
             {[
-              { time: "2 hours ago", method: "Nose Print", location: "Kigali Market", result: "Match 97.3%" },
+              { time: "2 hours ago", method: "Nose Print", location: "Juba Market", result: "Match 97.3%" },
               { time: "1 day ago", method: "Tag Lookup", location: "Musanze Center", result: "Match 100%" },
               { time: "3 days ago", method: "Nose Print", location: "Huye District", result: "Match 95.8%" },
             ].map((verification, index) => (

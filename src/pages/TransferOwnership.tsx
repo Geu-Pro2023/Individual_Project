@@ -68,28 +68,8 @@ const TransferOwnership = () => {
 
   const fetchTransferHistory = async (cowTag: string) => {
     try {
-      // Mock transfer history - replace with actual API call
-      const mockHistory = [
-        {
-          id: 1,
-          from_owner: "John Doe",
-          to_owner: "Jane Smith",
-          transfer_date: "2025-10-15",
-          reason: "Sale",
-          fee: 50000,
-          status: "Completed"
-        },
-        {
-          id: 2,
-          from_owner: "Jane Smith",
-          to_owner: "Current Owner",
-          transfer_date: "2025-10-20",
-          reason: "Gift",
-          fee: 0,
-          status: "Completed"
-        }
-      ];
-      setTransferHistory(mockHistory);
+      // TODO: Replace with actual API call
+      setTransferHistory([]);
     } catch (error) {
       console.error('Failed to fetch transfer history:', error);
     }
@@ -595,7 +575,7 @@ const TransferOwnership = () => {
                 </Select>
               </div>
               <div>
-                <Label>Transfer Fee (RWF)</Label>
+                <Label>Transfer Fee (SSP)</Label>
                 <Input
                   type="number"
                   value={transferFee}
@@ -702,7 +682,7 @@ const TransferOwnership = () => {
                       <TableCell>{transfer.from_owner}</TableCell>
                       <TableCell>{transfer.to_owner}</TableCell>
                       <TableCell>{transfer.reason}</TableCell>
-                      <TableCell>{transfer.fee.toLocaleString()} RWF</TableCell>
+                      <TableCell>{transfer.fee.toLocaleString()} SSP</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded text-xs ${
                           transfer.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -760,7 +740,7 @@ const TransferOwnership = () => {
                   <CardTitle className="text-sm font-medium">Average Fee</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{transferStats.avg_fee.toLocaleString()} RWF</div>
+                  <div className="text-2xl font-bold">{transferStats.avg_fee.toLocaleString()} SSP</div>
                 </CardContent>
               </Card>
               <Card>
@@ -812,7 +792,7 @@ const TransferOwnership = () => {
                   <p className="text-xs text-yellow-700">
                     <strong>Transfer Details:</strong><br/>
                     Reason: {transferReason}<br/>
-                    Fee: {transferFee.toLocaleString()} RWF<br/>
+                    Fee: {transferFee.toLocaleString()} SSP<br/>
                     Documents: {documents.length} file(s)<br/>
                     Notifications: {sendEmail ? 'Email' : ''} {sendSMS ? 'SMS' : ''}<br/>
                     {requireApproval ? 'Requires admin approval' : 'Immediate transfer'}
@@ -880,7 +860,7 @@ const TransferOwnership = () => {
                     <TableCell>{transfer.from_owner}</TableCell>
                     <TableCell>{transfer.to_owner}</TableCell>
                     <TableCell>{transfer.reason}</TableCell>
-                    <TableCell>{transfer.fee.toLocaleString()} RWF</TableCell>
+                    <TableCell>{transfer.fee.toLocaleString()} SSP</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded text-xs ${
                         transfer.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
