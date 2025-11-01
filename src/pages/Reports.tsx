@@ -57,8 +57,19 @@ const mockReports = [
 const Reports = () => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
-  const [reports, setReports] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState<any[]>(mockReports.map(report => ({
+    id: report.id.split('-')[1],
+    created_at: report.date,
+    reporter_name: report.reporter.name,
+    reporter_phone: report.reporter.phone,
+    reporter_email: report.reporter.email,
+    report_type: report.type,
+    cow_tag: report.cow,
+    status: report.status,
+    location: report.location,
+    message: report.description
+  })));
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchReports();
@@ -68,7 +79,7 @@ const Reports = () => {
     setLoading(true);
     try {
       const data = await reportsAPI.getAll();
-      if (data.reports && data.reports.length > 0) {
+      if (data && data.reports && data.reports.length > 0) {
         setReports(data.reports);
       } else {
         // Use mock data when no reports available (for demo purposes)
@@ -86,7 +97,8 @@ const Reports = () => {
         })));
       }
     } catch (error) {
-      // Use mock data when API fails (for demo purposes)
+      console.error('API Error:', error);
+      // Always use mock data when API fails (for demo purposes)
       setReports(mockReports.map(report => ({
         id: report.id.split('-')[1],
         created_at: report.date,
@@ -99,7 +111,6 @@ const Reports = () => {
         location: report.location,
         message: report.description
       })));
-      console.log('Using mock data for reports demo');
     } finally {
       setLoading(false);
     }
@@ -127,7 +138,7 @@ const Reports = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reports Management</h1>
+          <h1 className="text-2xl font-bold text-foreground">Get all Reports</h1>
           <p className="text-muted-foreground mt-1">Loading reports...</p>
         </div>
         <div className="h-64 bg-muted animate-pulse rounded-lg" />
