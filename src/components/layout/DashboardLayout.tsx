@@ -3,7 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GlobalSearch } from "@/components/ui/global-search";
-import { FloatingActionButton } from "@/components/ui/floating-action-button";
+
 import { NotificationSystem } from "@/components/ui/notification-system";
 import { Button } from "@/components/ui/button";
 import { Bell, User, Menu } from "lucide-react";
@@ -99,7 +99,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </main>
       </div>
-      <FloatingActionButton />
+
       <NotificationSystem />
     </div>
   );
