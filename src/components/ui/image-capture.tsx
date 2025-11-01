@@ -33,10 +33,7 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
       <Label className="text-xs font-medium">{label}</Label>
       
       {!preview && (
-        <div 
-          className="aspect-square rounded-lg border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" 
-          onClick={() => fileInputRef.current?.click()}
-        >
+        <div className="aspect-square rounded-lg border-2 border-dashed border-border bg-muted/30 hover:bg-muted/50 transition-colors">
           <div className="h-full flex flex-col items-center justify-center gap-4 p-4">
             <Upload className="h-16 w-16 text-muted-foreground" />
             <div className="text-center">
