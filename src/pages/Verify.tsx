@@ -170,7 +170,7 @@ const Verify = () => {
       </div>
 
       <Tabs defaultValue="tag" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+        <TabsList className="grid w-full max-w-xl grid-cols-2">
           <TabsTrigger value="tag" className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
             Verify by Cow Tag
@@ -178,10 +178,6 @@ const Verify = () => {
           <TabsTrigger value="noseprint" className="flex items-center gap-2">
             <Fingerprint className="h-4 w-4" />
             Verify by Nose Print
-          </TabsTrigger>
-          <TabsTrigger value="camera" className="flex items-center gap-2">
-            <Camera className="h-4 w-4" />
-            Verify using Camera
           </TabsTrigger>
         </TabsList>
 
@@ -193,7 +189,7 @@ const Verify = () => {
                 Nose Print Verification
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Upload a clear image of the cow's nose print for verification
+                Upload or capture a clear image of the cow's nose print for verification
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -241,31 +237,7 @@ const Verify = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="camera" className="mt-6">
-          <Card className="shadow-card max-w-2xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                Verify using Camera
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Take a live photo of the cow for verification
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="max-w-md mx-auto">
-                <ImageCapture
-                  label="Live Camera Photo"
-                  onImageCapture={(file) => setNosePrintImage(file)}
-                />
-              </div>
-              <Button size="lg" className="w-full" onClick={handleNosePrintVerify} disabled={verifying}>
-                <Camera className="mr-2 h-4 w-4" />
-                {verifying ? 'Verifying...' : 'Verify using Camera'}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
 
       {verificationResult && (
