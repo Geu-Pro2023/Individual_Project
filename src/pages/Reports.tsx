@@ -116,14 +116,14 @@ const Reports = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  reports.map((report) => (
+                  reports.filter(report => report.report_id).map((report) => (
                     <TableRow key={report.report_id}>
                       <TableCell className="font-mono font-semibold">
-                        RPT-{report.report_id.toString().padStart(3, '0')}
+                        RPT-{(report.report_id || 0).toString().padStart(3, '0')}
                       </TableCell>
-                      <TableCell>{new Date(report.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{report.reporter_name}</TableCell>
-                      <TableCell>{report.report_type}</TableCell>
+                      <TableCell>{report.created_at ? new Date(report.created_at).toLocaleDateString() : 'N/A'}</TableCell>
+                      <TableCell>{report.reporter_name || 'N/A'}</TableCell>
+                      <TableCell>{report.report_type || 'N/A'}</TableCell>
                       <TableCell className="font-mono text-primary">{report.cow_tag || 'N/A'}</TableCell>
                       <TableCell>
                         <span
@@ -135,7 +135,7 @@ const Reports = () => {
                               : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
-                          {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                          {(report.status || 'unknown').charAt(0).toUpperCase() + (report.status || 'unknown').slice(1)}
                         </span>
                       </TableCell>
                       <TableCell>
