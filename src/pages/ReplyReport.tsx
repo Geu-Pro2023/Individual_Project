@@ -27,12 +27,16 @@ const ReplyReport = () => {
     setSearching(true);
     try {
       const data = await reportsAPI.getAll();
-      console.log('API Response:', data);
+      console.log('Full API Response:', data);
       console.log('Looking for ID:', reportId);
       
-      if (data.reports) {
-        console.log('Available reports:', data.reports.map((r: any) => ({ id: r.id, type: typeof r.id })));
-        const foundReport = data.reports.find((r: any) => 
+      // Handle different response formats
+      const reports = data.reports || data || [];
+      console.log('Reports array:', reports);
+      
+      if (reports && reports.length > 0) {
+        console.log('Available reports:', reports.map((r: any) => ({ id: r.id, type: typeof r.id })));
+        const foundReport = reports.find((r: any) => 
           r.id.toString() === reportId || 
           r.id === parseInt(reportId)
         );
@@ -43,11 +47,11 @@ const ReplyReport = () => {
           setStatus(foundReport.status);
           toast.success("Report found!");
         } else {
-          toast.error(`Report ID ${reportId} not found`);
+          toast.error(`Report ID ${reportId} not found in ${reports.length} reports`);
           setReport(null);
         }
       } else {
-        toast.error("No reports data received");
+        toast.error("No reports available");
         setReport(null);
       }
     } catch (error: any) {
