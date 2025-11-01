@@ -10,6 +10,7 @@ import Cattle from "./pages/Cattle";
 import Owners from "./pages/Owners";
 import Verify from "./pages/Verify";
 import Reports from "./pages/Reports";
+import ReplyReport from "./pages/ReplyReport";
 import Analytics from "./pages/Analytics";
 import VerificationLogs from "./pages/VerificationLogs";
 import Settings from "./pages/Settings";
@@ -48,6 +49,7 @@ const App = () => {
             <Route path="/owners" element={<ProtectedRoute><DashboardLayout><Owners /></DashboardLayout></ProtectedRoute>} />
             <Route path="/verify" element={<ProtectedRoute><DashboardLayout><Verify /></DashboardLayout></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><DashboardLayout><Reports /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/reply-report" element={<ProtectedRoute><DashboardLayout><ReplyReport /></DashboardLayout></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
             <Route path="/logs" element={<ProtectedRoute><DashboardLayout><VerificationLogs /></DashboardLayout></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
