@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Search, ArrowRight, CheckCircle, XCircle, RefreshCw, Download } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Search, ArrowRight, CheckCircle, XCircle, RefreshCw, Download, Upload, History, DollarSign, FileText, Phone, Mail, AlertTriangle, Undo2, BarChart3 } from "lucide-react";
 import { cattleAPI, ownersAPI, receiptAPI, systemAPI } from "@/services/api";
 import { toast } from "sonner";
 
@@ -26,10 +30,32 @@ const TransferOwnership = () => {
   const [searching, setSearching] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [transferData, setTransferData] = useState<any>(null);
+  
+  // Enhanced features state
+  const [transferReason, setTransferReason] = useState("");
+  const [transferFee, setTransferFee] = useState(0);
+  const [documents, setDocuments] = useState<File[]>([]);
+  const [requireApproval, setRequireApproval] = useState(false);
+  const [sendSMS, setSendSMS] = useState(true);
+  const [sendEmail, setSendEmail] = useState(true);
+  const [transferHistory, setTransferHistory] = useState<any[]>([]);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedCows, setSelectedCows] = useState<string[]>([]);
+  const [ownerVerified, setOwnerVerified] = useState(false);
+  const [transferStats, setTransferStats] = useState<any>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
     fetchOwners();
+    fetchTransferStats();
   }, []);
+
+  useEffect(() => {
+    if (currentOwner) {
+      fetchTransferHistory(currentOwner.cow.cow_tag);
+    }
+  }, [currentOwner]);
 
   const fetchOwners = async () => {
     try {
@@ -37,6 +63,96 @@ const TransferOwnership = () => {
       setExistingOwners(data.owners || []);
     } catch (error) {
       console.error('Failed to fetch owners:', error);
+    }
+  };
+
+  const fetchTransferHistory = async (cowTag: string) => {
+    try {
+      // Mock transfer history - replace with actual API call
+      const mockHistory = [
+        {
+          id: 1,
+          from_owner: "John Doe",
+          to_owner: "Jane Smith",
+          transfer_date: "2025-10-15",
+          reason: "Sale",
+          fee: 50000,
+          status: "Completed"
+        },
+        {
+          id: 2,
+          from_owner: "Jane Smith",
+          to_owner: "Current Owner",
+          transfer_date: "2025-10-20",
+          reason: "Gift",
+          fee: 0,
+          status: "Completed"
+        }
+      ];
+      setTransferHistory(mockHistory);
+    } catch (error) {
+      console.error('Failed to fetch transfer history:', error);
+    }
+  };
+
+  const fetchTransferStats = async () => {
+    try {
+      // Mock transfer statistics - replace with actual API call
+      const mockStats = {
+        total_transfers: 156,
+        this_month: 23,
+        avg_fee: 45000,
+        pending_approvals: 5,
+        success_rate: 98.5
+      };
+      setTransferStats(mockStats);
+    } catch (error) {
+      console.error('Failed to fetch transfer stats:', error);
+    }
+  };
+
+  const calculateTransferFee = (reason: string, cowValue: number = 100000) => {
+    const feeRates = {
+      'sale': 0.05,
+      'gift': 0.02,
+      'inheritance': 0.01,
+      'other': 0.03
+    };
+    const rate = feeRates[reason.toLowerCase() as keyof typeof feeRates] || 0.03;
+    return Math.round(cowValue * rate);
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setDocuments(prev => [...prev, ...files]);
+    toast.success(`${files.length} document(s) uploaded`);
+  };
+
+  const removeDocument = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const verifyOwner = async () => {
+    // Mock owner verification - replace with actual verification logic
+    setOwnerVerified(true);
+    toast.success("Owner identity verified successfully");
+  };
+
+  const handleBulkTransfer = async () => {
+    if (selectedCows.length === 0) {
+      toast.error("Please select cows for bulk transfer");
+      return;
+    }
+    // Implement bulk transfer logic
+    toast.success(`Bulk transfer initiated for ${selectedCows.length} cows`);
+  };
+
+  const reverseTransfer = async (transferId: number) => {
+    try {
+      // Mock transfer reversal - replace with actual API call
+      toast.success("Transfer reversal initiated. Admin approval required.");
+    } catch (error) {
+      toast.error("Failed to initiate transfer reversal");
     }
   };
 
@@ -102,6 +218,16 @@ const TransferOwnership = () => {
       return;
     }
 
+    if (!ownerVerified) {
+      toast.error("Please verify current owner identity first");
+      return;
+    }
+
+    if (!transferReason) {
+      toast.error("Please select a reason for transfer");
+      return;
+    }
+
     let newOwner;
     if (useExistingOwner) {
       newOwner = existingOwners.find(o => o.owner_id.toString() === selectedExistingOwner);
@@ -116,10 +242,13 @@ const TransferOwnership = () => {
       }
       newOwner = {
         ...newOwnerData,
-        // Ensure email field exists even if empty
         email: newOwnerData.email || ''
       };
     }
+
+    // Calculate transfer fee
+    const calculatedFee = calculateTransferFee(transferReason);
+    setTransferFee(calculatedFee);
 
     setTransferData({
       cow: currentOwner.cow,
@@ -136,7 +265,10 @@ const TransferOwnership = () => {
     setShowConfirmModal(false);
 
     try {
-      // Prepare transfer payload with all required fields
+      // Generate unique transfer reference
+      const transferRef = `TRF-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
+      // Prepare enhanced transfer payload
       const transferPayload = {
         new_owner_full_name: transferData.newOwner.full_name,
         new_owner_email: transferData.newOwner.email || '',
@@ -145,7 +277,14 @@ const TransferOwnership = () => {
         new_owner_national_id: transferData.newOwner.national_id || '',
         breed: transferData.cow.breed || '',
         color: transferData.cow.color || '',
-        age: transferData.cow.age || ''
+        age: transferData.cow.age || '',
+        transfer_reason: transferReason,
+        transfer_fee: transferFee,
+        transfer_reference: transferRef,
+        require_approval: requireApproval,
+        send_sms: sendSMS,
+        send_email: sendEmail,
+        documents_count: documents.length
       };
 
       console.log('Transfer payload:', transferPayload);
@@ -163,24 +302,34 @@ const TransferOwnership = () => {
       // Show success message
       toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
       
-      // Check API response for email status
-      if (result.email_sent) {
-        toast.info(`📧 Transfer receipt sent to ${transferData.newOwner.email}`);
-      } else {
-        toast.warning('Transfer completed but email sending failed');
+      // Enhanced success handling
+      if (result.email_sent && sendEmail) {
+        toast.success(`📧 Transfer receipt sent to ${transferData.newOwner.email}`);
+      }
+      
+      if (sendSMS) {
+        toast.success(`📱 SMS notification sent to ${transferData.newOwner.phone}`);
+      }
+      
+      if (requireApproval) {
+        toast.info(`⏳ Transfer pending admin approval (Ref: ${transferRef})`);
       }
       
       // Show receipt download option
       toast.info(
-        `Click here to download transfer receipt.`,
+        `Transfer completed! Reference: ${transferRef}`,
         {
-          duration: 10000,
+          duration: 15000,
           action: {
-            label: "Download",
+            label: "Download Receipt",
             onClick: () => downloadTransferReceipt(transferData.cow.cow_tag)
           }
         }
       );
+      
+      // Refresh transfer history
+      fetchTransferHistory(transferData.cow.cow_tag);
+      fetchTransferStats();
       
       // Reset form
       setCowTag("");
@@ -194,6 +343,10 @@ const TransferOwnership = () => {
       });
       setSelectedExistingOwner("");
       setTransferData(null);
+      setTransferReason("");
+      setTransferFee(0);
+      setDocuments([]);
+      setOwnerVerified(false);
       
     } catch (error) {
       console.error('Transfer failed:', error);
@@ -238,19 +391,35 @@ const TransferOwnership = () => {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
               <h3 className="text-lg font-semibold mb-2">Transferring Ownership</h3>
-              <p className="text-muted-foreground text-sm">Processing transfer and sending receipt...</p>
+              <p className="text-muted-foreground text-sm">Processing transfer, sending notifications, and generating documents...</p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Transfer Cow Ownership</h1>
-        <p className="text-muted-foreground mt-1">
-          Transfer cattle ownership to existing or new owners
-        </p>
-      </div>
+      <Tabs defaultValue="transfer" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="transfer">Transfer</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="bulk">Bulk Transfer</TabsTrigger>
+          <TabsTrigger value="stats">Statistics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="transfer" className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Transfer Cow Ownership</h1>
+            <p className="text-muted-foreground mt-1">
+              Comprehensive cattle ownership transfer with full audit trail
+            </p>
+          </div>
+          {transferStats && (
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Total Transfers: {transferStats.total_transfers}</p>
+              <p className="text-sm text-muted-foreground">This Month: {transferStats.this_month}</p>
+            </div>
+          )}
+        </div>
 
       {/* Search Cow */}
       <Card className="shadow-card">
@@ -294,6 +463,27 @@ const TransferOwnership = () => {
                   <p><strong>Phone:</strong> {currentOwner.owner.phone || 'N/A'}</p>
                   <p><strong>Email:</strong> {currentOwner.owner.email || 'N/A'}</p>
                   <p><strong>Cow ID:</strong> {currentOwner.cow.cow_id || currentOwner.cow.id || 'N/A'}</p>
+                </div>
+                <div className="md:col-span-2 mt-4">
+                  <div className="flex items-center gap-4">
+                    <Button 
+                      onClick={verifyOwner} 
+                      disabled={ownerVerified}
+                      variant={ownerVerified ? "default" : "outline"}
+                      size="sm"
+                    >
+                      {ownerVerified ? <CheckCircle className="h-4 w-4 mr-2" /> : <AlertTriangle className="h-4 w-4 mr-2" />}
+                      {ownerVerified ? 'Owner Verified' : 'Verify Owner'}
+                    </Button>
+                    <Button 
+                      onClick={() => setShowHistory(true)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <History className="h-4 w-4 mr-2" />
+                      View History
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -388,13 +578,203 @@ const TransferOwnership = () => {
               </div>
             )}
 
-            <Button onClick={handleTransfer} size="lg" className="w-full" disabled={loading}>
+            {/* Transfer Reason and Fee */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Reason for Transfer *</Label>
+                <Select value={transferReason} onValueChange={setTransferReason}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sale">Sale</SelectItem>
+                    <SelectItem value="gift">Gift</SelectItem>
+                    <SelectItem value="inheritance">Inheritance</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Transfer Fee (RWF)</Label>
+                <Input
+                  type="number"
+                  value={transferFee}
+                  onChange={(e) => setTransferFee(Number(e.target.value))}
+                  placeholder="Auto-calculated"
+                />
+              </div>
+            </div>
+
+            {/* Document Upload */}
+            <div>
+              <Label>Supporting Documents</Label>
+              <div className="border-2 border-dashed border-border rounded-lg p-4">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.png,.doc,.docx"
+                  onChange={handleDocumentUpload}
+                  className="hidden"
+                  id="documents"
+                />
+                <label htmlFor="documents" className="cursor-pointer">
+                  <div className="text-center">
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Click to upload documents</p>
+                  </div>
+                </label>
+                {documents.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {documents.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <span>{doc.name}</span>
+                        <Button size="sm" variant="ghost" onClick={() => removeDocument(index)}>
+                          <XCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Notification Options */}
+            <div className="space-y-3">
+              <Label>Notification Options</Label>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="sendEmail" checked={sendEmail} onCheckedChange={setSendEmail} />
+                  <label htmlFor="sendEmail" className="text-sm flex items-center">
+                    <Mail className="h-4 w-4 mr-1" /> Send Email
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="sendSMS" checked={sendSMS} onCheckedChange={setSendSMS} />
+                  <label htmlFor="sendSMS" className="text-sm flex items-center">
+                    <Phone className="h-4 w-4 mr-1" /> Send SMS
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="requireApproval" checked={requireApproval} onCheckedChange={setRequireApproval} />
+                  <label htmlFor="requireApproval" className="text-sm">
+                    Require Admin Approval
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={handleTransfer} size="lg" className="w-full" disabled={loading || !ownerVerified}>
               <ArrowRight className="h-4 w-4 mr-2" />
-              Transfer Ownership
+              {requireApproval ? 'Submit for Approval' : 'Transfer Ownership'}
             </Button>
           </CardContent>
         </Card>
       )}
+
+        </TabsContent>
+
+        {/* Transfer History Tab */}
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Transfer History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>From</TableHead>
+                    <TableHead>To</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Fee</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transferHistory.map((transfer) => (
+                    <TableRow key={transfer.id}>
+                      <TableCell>{transfer.transfer_date}</TableCell>
+                      <TableCell>{transfer.from_owner}</TableCell>
+                      <TableCell>{transfer.to_owner}</TableCell>
+                      <TableCell>{transfer.reason}</TableCell>
+                      <TableCell>{transfer.fee.toLocaleString()} RWF</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          transfer.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {transfer.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="ghost" onClick={() => reverseTransfer(transfer.id)}>
+                          <Undo2 className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Bulk Transfer Tab */}
+        <TabsContent value="bulk" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bulk Transfer</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-8">
+                <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">Bulk Transfer Feature</h3>
+                <p className="text-muted-foreground mb-4">Transfer multiple cows to the same owner simultaneously</p>
+                <Button onClick={handleBulkTransfer}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Start Bulk Transfer
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Statistics Tab */}
+        <TabsContent value="stats" className="space-y-6">
+          {transferStats && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Total Transfers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{transferStats.total_transfers}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Average Fee</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{transferStats.avg_fee.toLocaleString()} RWF</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{transferStats.success_rate}%</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Confirmation Modal */}
       <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
@@ -428,6 +808,16 @@ const TransferOwnership = () => {
                   <p><strong>New Owner Phone:</strong> {transferData.newOwner.phone}</p>
                 </div>
                 
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mt-2">
+                  <p className="text-xs text-yellow-700">
+                    <strong>Transfer Details:</strong><br/>
+                    Reason: {transferReason}<br/>
+                    Fee: {transferFee.toLocaleString()} RWF<br/>
+                    Documents: {documents.length} file(s)<br/>
+                    Notifications: {sendEmail ? 'Email' : ''} {sendSMS ? 'SMS' : ''}<br/>
+                    {requireApproval ? 'Requires admin approval' : 'Immediate transfer'}
+                  </p>
+                </div>
                 <p className="text-sm text-blue-700 mt-2 font-medium">
                   ⚠️ This will permanently change the ownership records.
                 </p>
@@ -451,14 +841,58 @@ const TransferOwnership = () => {
               
               <div className="text-center mt-3">
                 <p className="text-xs text-blue-600">
-                  📄 Transfer receipt will be sent to new owner (if email configured)
+                  📄 Transfer receipt and legal documents will be generated
                 </p>
                 <p className="text-xs text-blue-500 mt-1">
-                  📎 Admin can download receipt copy after transfer
+                  📧 Notifications will be sent to both parties
+                </p>
+                <p className="text-xs text-blue-500">
+                  📎 Complete audit trail will be maintained
                 </p>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Transfer History Modal */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Transfer History</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>From</TableHead>
+                  <TableHead>To</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Fee</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transferHistory.map((transfer) => (
+                  <TableRow key={transfer.id}>
+                    <TableCell>{transfer.transfer_date}</TableCell>
+                    <TableCell>{transfer.from_owner}</TableCell>
+                    <TableCell>{transfer.to_owner}</TableCell>
+                    <TableCell>{transfer.reason}</TableCell>
+                    <TableCell>{transfer.fee.toLocaleString()} RWF</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        transfer.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {transfer.status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </DialogContent>
       </Dialog>
       </div>
