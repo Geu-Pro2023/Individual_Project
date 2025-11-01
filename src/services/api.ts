@@ -37,7 +37,7 @@ export const cattleAPI = {
         formData.append(key, data[key]);
       }
     });
-    return apiClient.postForm(`/admin/cow/${cowTag}/transfer`, formData);
+    return apiClient.postForm(`/admin/transfer/${cowTag}`, formData);
   },
   delete: (cowTag: string) => apiClient.delete(`/admin/cow/${cowTag}/delete`),
   deleteWithDetails: (cowTag: string) => apiClient.delete(`/admin/cow/${cowTag}/delete-full`),
