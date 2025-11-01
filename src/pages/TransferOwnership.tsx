@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Search, ArrowRight, CheckCircle, XCircle, RefreshCw } from "lucide-react";
-import { cattleAPI, ownersAPI } from "@/services/api";
+import { Users, Search, ArrowRight, CheckCircle, XCircle, RefreshCw, Download } from "lucide-react";
+import { cattleAPI, ownersAPI, receiptAPI } from "@/services/api";
 import { toast } from "sonner";
 
 const TransferOwnership = () => {
@@ -125,7 +125,22 @@ const TransferOwnership = () => {
 
       await cattleAPI.transfer(transferData.cow.cow_id || transferData.cow.id, transferPayload);
       
-      toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
+      // Show success with receipt download option
+      toast.success(
+        <div className="flex items-center justify-between w-full">
+          <span>Cow {transferData.cow.cow_tag} successfully transferred to {transferData.newOwner.full_name}</span>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => downloadTransferReceipt(transferData.cow.cow_tag)}
+            className="ml-2"
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Receipt
+          </Button>
+        </div>,
+        { duration: 10000 }
+      );
       
       // Reset form
       setCowTag("");
@@ -145,6 +160,32 @@ const TransferOwnership = () => {
       toast.error("Failed to transfer ownership");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const downloadTransferReceipt = async (cowTag: string) => {
+    try {
+      const response = await fetch(`https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/receipt/${cowTag}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${cowTag}_transfer_receipt.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        toast.success('Transfer receipt downloaded successfully');
+      } else {
+        toast.error('Failed to download transfer receipt');
+      }
+    } catch (error) {
+      console.error('Receipt download error:', error);
+      toast.error('Failed to download transfer receipt');
     }
   };
 
@@ -351,6 +392,12 @@ const TransferOwnership = () => {
                 >
                   {loading ? 'Transferring...' : 'Confirm Transfer'}
                 </Button>
+              </div>
+              
+              <div className="text-center mt-3">
+                <p className="text-xs text-blue-600">
+                  📄 A transfer receipt will be available for download after confirmation
+                </p>
               </div>
             </div>
           )}
