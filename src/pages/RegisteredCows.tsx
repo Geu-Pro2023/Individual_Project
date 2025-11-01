@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw, Phone, Mail } from "lucide-react";
-import { cattleAPI } from "@/services/api";
+import { cattleAPI, ownersAPI } from "@/services/api";
 
 const RegisteredCows = () => {
   const [cows, setCows] = useState<any[]>([]);
@@ -16,10 +16,37 @@ const RegisteredCows = () => {
   const fetchCows = async () => {
     setLoading(true);
     try {
-      const data = await cattleAPI.getAll();
-      setCows(data.cows || []);
+      // Fetch both cows and owners data
+      const [cowsData, ownersData] = await Promise.all([
+        cattleAPI.getAll(),
+        ownersAPI.getAll()
+      ]);
+      
+      const cows = cowsData.cows || [];
+      const owners = ownersData.owners || [];
+      
+      // Combine cow data with owner details
+      const combinedData = cows.map(cow => {
+        const owner = owners.find(o => 
+          o.owner_id === cow.owner_id || 
+          o.id === cow.owner_id ||
+          o.owner_full_name === cow.owner_full_name
+        );
+        
+        return {
+          ...cow,
+          // Use owner data if found, otherwise fallback to cow data
+          owner_full_name: owner?.owner_full_name || owner?.full_name || cow.owner_full_name,
+          owner_phone: owner?.owner_phone || owner?.phone || cow.owner_phone,
+          owner_email: owner?.owner_email || owner?.email || cow.owner_email,
+          owner_address: owner?.owner_address || owner?.address || cow.owner_address,
+          owner_national_id: owner?.owner_national_id || owner?.national_id || cow.owner_national_id
+        };
+      });
+      
+      setCows(combinedData);
     } catch (error) {
-      console.error('Failed to fetch cows:', error);
+      console.error('Failed to fetch data:', error);
       setCows([]);
     } finally {
       setLoading(false);
