@@ -54,7 +54,6 @@ const VerificationLogs = () => {
                 <TableRow>
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Cow Tag</TableHead>
-                  <TableHead>Method</TableHead>
                   <TableHead>Result</TableHead>
                   <TableHead>Similarity</TableHead>
                   <TableHead>Location</TableHead>
@@ -64,13 +63,13 @@ const VerificationLogs = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading verification logs...
                     </TableCell>
                   </TableRow>
                 ) : logs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No verification logs available.
                     </TableCell>
                   </TableRow>
@@ -82,11 +81,6 @@ const VerificationLogs = () => {
                       </TableCell>
                       <TableCell className="font-mono font-semibold text-primary">
                         {log.cow_tag || 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
-                          🔍 Verification
-                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
