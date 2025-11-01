@@ -283,11 +283,11 @@ const TransferOwnership = () => {
       toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
       
       // Enhanced success handling
-      if (result.email_sent && sendEmail) {
+      if (sendEmail && transferData.newOwner.email) {
         toast.success(`📧 Transfer receipt sent to ${transferData.newOwner.email}`);
       }
       
-      if (sendSMS) {
+      if (sendSMS && transferData.newOwner.phone) {
         toast.success(`📱 SMS notification sent to ${transferData.newOwner.phone}`);
       }
       
