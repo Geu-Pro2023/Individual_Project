@@ -32,12 +32,13 @@ const RegisteredCows = () => {
 
   const handleViewQR = async (cowTag: string) => {
     try {
-      // Extract cow_id from cow data for QR verification
+      // Use the QR code data from cow object
       const cow = cows.find(c => c.cow_tag === cowTag);
-      if (cow && cow.cow_id) {
-        window.open(`https://titweng.app/verify/${cow.cow_id}`, '_blank');
+      if (cow && cow.qr_code_data) {
+        window.open(cow.qr_code_data, '_blank');
       } else {
-        toast.error('Cow ID not found');
+        // Fallback to verification URL with cow_id
+        window.open(`https://titweng.app/verify/${cow?.cow_id || cowTag}`, '_blank');
       }
     } catch (error) {
       toast.error('Failed to open QR code');
@@ -78,12 +79,15 @@ const RegisteredCows = () => {
       });
       
       if (response.ok) {
-        const blob = await response.blob();
-        const imageUrl = window.URL.createObjectURL(blob);
-        window.open(imageUrl, '_blank');
-        toast.success('Cow face image opened');
+        const data = await response.json();
+        if (data.facial_image_url) {
+          window.open(data.facial_image_url, '_blank');
+          toast.success('Cow face image opened');
+        } else {
+          toast.error('No facial image available for this cow');
+        }
       } else {
-        toast.error('Failed to load cow face image');
+        toast.error('Failed to load cow face data');
       }
     } catch (error) {
       toast.error('Failed to view cow face');
