@@ -52,12 +52,12 @@ const VerificationLogs = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Cow Tag</TableHead>
-                  <TableHead>Result</TableHead>
-                  <TableHead>Similarity</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>log_id</TableHead>
+                  <TableHead>cow_tag</TableHead>
+                  <TableHead>similarity_score</TableHead>
+                  <TableHead>verified</TableHead>
+                  <TableHead>location</TableHead>
+                  <TableHead>created_at</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -77,35 +77,26 @@ const VerificationLogs = () => {
                   logs.map((log, index) => (
                     <TableRow key={log.log_id || index}>
                       <TableCell className="text-sm">
-                        {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
+                        {log.log_id || 'N/A'}
                       </TableCell>
                       <TableCell className="font-mono font-semibold text-primary">
                         {log.cow_tag || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {log.verified === 'yes' ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-red-600" />
-                          )}
-                          <span className={`font-medium ${
-                            log.verified === 'yes' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {log.verified === 'yes' ? 'Verified' : 'Failed'}
-                          </span>
-                        </div>
+                        {log.similarity_score ? `${(log.similarity_score * 100).toFixed(1)}%` : 'N/A'}
                       </TableCell>
                       <TableCell>
-                        {log.similarity_score ? `${(log.similarity_score * 100).toFixed(1)}%` : 'N/A'}
+                        <span className={`font-medium ${
+                          log.verified === 'yes' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {log.verified || 'N/A'}
+                        </span>
                       </TableCell>
                       <TableCell className="text-sm">
                         {log.location || 'N/A'}
                       </TableCell>
-                      <TableCell>
-                        <Button size="icon" variant="ghost" title="View Details">
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                      <TableCell className="text-sm">
+                        {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
                       </TableCell>
                     </TableRow>
                   ))
