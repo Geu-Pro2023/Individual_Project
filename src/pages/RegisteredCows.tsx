@@ -25,27 +25,16 @@ const RegisteredCows = () => {
       const cows = cowsData.cows || [];
       const owners = ownersData.owners || [];
       
-      console.log('Cows data:', cows);
-      console.log('Owners data:', owners);
-      
       // Combine cow data with owner details
       const combinedData = cows.map(cow => {
-        console.log('Processing cow - ALL FIELDS:', Object.keys(cow), cow);
         const owner = owners.find(o => {
           // Try ID matching first (proper way)
           if (cow.owner_id && o.owner_id === cow.owner_id) {
-            console.log('MATCHED BY ID:', o.owner_id, 'for cow:', cow.cow_tag);
             return true;
           }
           // Fallback to name matching
-          if (o.full_name === cow.owner_name) {
-            console.log('MATCHED BY NAME:', o.full_name, 'for cow:', cow.cow_tag);
-            return true;
-          }
-          return false;
+          return o.full_name === cow.owner_name;
         });
-        
-        console.log('Found owner:', owner, 'for cow:', cow.cow_tag);
         
         return {
           ...cow,
@@ -58,7 +47,6 @@ const RegisteredCows = () => {
         };
       });
       
-      console.log('Final combined data:', combinedData);
       setCows(combinedData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
