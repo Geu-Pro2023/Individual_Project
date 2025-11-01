@@ -17,40 +17,9 @@ const RegisteredCows = () => {
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Filter and search functionality
   useEffect(() => {
-    let filtered = cows.filter(cow => {
-      const matchesSearch = 
-        (cow.cow_tag || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (cow.owner_full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (cow.breed || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesBreed = !breedFilter || cow.breed === breedFilter;
-      
-      return matchesSearch && matchesBreed;
-    });
-
-    // Apply sorting
-    if (sortField) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortField] || '';
-        let bVal = b[sortField] || '';
-        
-        if (sortField === 'registered_at') {
-          aVal = new Date(aVal).getTime();
-          bVal = new Date(bVal).getTime();
-        }
-        
-        if (sortOrder === 'asc') {
-          return aVal > bVal ? 1 : -1;
-        } else {
-          return aVal < bVal ? 1 : -1;
-        }
-      });
-    }
-
-    setFilteredCows(filtered);
-  }, [cows, searchTerm, breedFilter, sortField, sortOrder]);
+    setFilteredCows(cows);
+  }, [cows]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -106,26 +75,7 @@ const RegisteredCows = () => {
     return [...new Set(cows.map(cow => cow.breed).filter(Boolean))];
   };
 
-  const getStats = () => {
-    const total = cows.length;
-    const breedCounts = cows.reduce((acc, cow) => {
-      const breed = cow.breed || 'Unknown';
-      acc[breed] = (acc[breed] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    const recentCount = cows.filter(cow => {
-      if (!cow.registered_at) return false;
-      const regDate = new Date(cow.registered_at);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return regDate > weekAgo;
-    }).length;
 
-    return { total, breedCounts, recentCount };
-  };
-
-  const stats = getStats();
 
   const exportToCSV = () => {
     const headers = [
@@ -236,73 +186,9 @@ const RegisteredCows = () => {
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Cows</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Recent (7 days)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.recentCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Top Breed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {Object.entries(stats.breedCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Filtered Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{filteredCows.length}</div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Search and Filter */}
-      <Card className="shadow-card">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by cow tag, owner name, or breed..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={breedFilter} onValueChange={setBreedFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filter by breed" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Breeds</SelectItem>
-                {getUniqueBreeds().map(breed => (
-                  <SelectItem key={breed} value={breed}>{breed}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+
+
 
       <Card className="shadow-card">
         <CardContent className="p-0">
