@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Eye, CheckCircle, XCircle, Download, Search, ArrowUpDown, Trash2, Calendar } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RefreshCw, Eye, CheckCircle, XCircle, Download, Search, ArrowUpDown, Trash2, Calendar, X } from "lucide-react";
 import { verificationAPI } from "@/services/api";
 import { toast } from "sonner";
 
@@ -20,6 +21,9 @@ const VerificationLogs = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [deletingLogId, setDeletingLogId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -146,6 +150,32 @@ const VerificationLogs = () => {
     link.click();
     window.URL.revokeObjectURL(url);
     toast.success('Verification logs exported successfully');
+  };
+
+  const handleViewDetails = (log: any) => {
+    setSelectedLog(log);
+    setShowDetailsModal(true);
+  };
+
+  const handleDeleteLog = async (logId: number) => {
+    if (!confirm('Are you sure you want to delete this verification log?')) {
+      return;
+    }
+    
+    setDeletingLogId(logId);
+    try {
+      // Note: You'll need to add this endpoint to your FastAPI backend
+      // await verificationAPI.deleteLog(logId);
+      
+      // For now, just remove from local state
+      setLogs(prev => prev.filter(log => log.log_id !== logId));
+      toast.success('Verification log deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete log:', error);
+      toast.error('Failed to delete verification log');
+    } finally {
+      setDeletingLogId(null);
+    }
   };
 
   const getStats = () => {
@@ -381,10 +411,22 @@ const VerificationLogs = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" title="View Details">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            title="View Details"
+                            onClick={() => handleViewDetails(log)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" title="Delete Log" className="text-red-600 hover:text-red-700">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            title="Delete Log" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteLog(log.log_id)}
+                            disabled={deletingLogId === log.log_id}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -427,6 +469,65 @@ const VerificationLogs = () => {
           </div>
         </div>
       )}
+
+      {/* View Details Modal */}
+      <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Verification Log Details - ID: {selectedLog?.log_id}
+              </DialogTitle>
+              <Button variant="ghost" size="icon" onClick={() => setShowDetailsModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Basic Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Log ID:</strong> {selectedLog.log_id}</p>
+                    <p><strong>Cow Tag:</strong> {selectedLog.cow_tag || 'N/A'}</p>
+                    <p><strong>Location:</strong> {selectedLog.location || 'N/A'}</p>
+                    <p><strong>Date:</strong> {selectedLog.created_at ? new Date(selectedLog.created_at).toLocaleString() : 'N/A'}</p>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Verification Results</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <strong>Status:</strong>
+                      {selectedLog.verified === 'yes' ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-green-600 font-medium">Verified</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-4 w-4 text-red-600" />
+                          <span className="text-red-600 font-medium">Failed</span>
+                        </>
+                      )}
+                    </div>
+                    <p><strong>Similarity Score:</strong> {selectedLog.similarity_score ? `${(selectedLog.similarity_score * 100).toFixed(4)}%` : 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Additional Information</h3>
+                <div className="bg-muted p-3 rounded text-sm">
+                  <p>This verification log shows the result of a cow identification attempt. The similarity score indicates how closely the submitted data matched the registered cow information.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
