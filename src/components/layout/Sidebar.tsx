@@ -50,7 +50,7 @@ export const Sidebar = ({
       items: [
         { name: "Get all Reports", href: "/reports", icon: AlertCircle },
         { name: "Reply to Report", href: "/reply-report", icon: FileText },
-        { name: "Get all Verification log", href: "/logs", icon: FileText },
+        { name: "Verification Logs", href: "/logs", icon: FileText },
       ]
     },
     {
