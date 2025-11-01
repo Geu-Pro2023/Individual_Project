@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye } from "lucide-react";
+import { Eye, RefreshCw } from "lucide-react";
+import { reportsAPI } from "@/services/api";
 
 const mockReports = [
   { 
@@ -52,25 +53,38 @@ const mockReports = [
 ];
 
 const Reports = () => {
-  const reports = mockReports.map(report => ({
-    id: report.id.split('-')[1],
-    created_at: report.date,
-    reporter_name: report.reporter.name,
-    reporter_phone: report.reporter.phone,
-    reporter_email: report.reporter.email,
-    report_type: report.type,
-    cow_tag: report.cow,
-    status: report.status,
-    location: report.location,
-    message: report.description
-  }));
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    setLoading(true);
+    try {
+      const data = await reportsAPI.getAll();
+      setReports(data.reports || []);
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Get all Reports</h1>
-        <p className="text-muted-foreground mt-1">
-          View all submitted reports from users
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Get all Reports</h1>
+          <p className="text-muted-foreground mt-1">
+            View all submitted reports from users
+          </p>
+        </div>
+        <Button onClick={fetchReports} disabled={loading}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          {loading ? 'Loading...' : 'Refresh'}
+        </Button>
       </div>
 
       <Card className="shadow-card">
@@ -89,7 +103,13 @@ const Reports = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reports.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Loading reports...
+                    </TableCell>
+                  </TableRow>
+                ) : reports.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No reports available.
@@ -109,14 +129,13 @@ const Reports = () => {
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                             report.status === "pending"
-                              ? "bg-urgent/10 text-urgent"
-                              : report.status === "in_progress"
-                              ? "bg-warning/10 text-warning"
-                              : "bg-success/10 text-success"
+                              ? "bg-red-100 text-red-800"
+                              : report.status === "resolved"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
-                          {report.status === "pending" && "⚠️ "}
-                          {report.status.replace('_', ' ').charAt(0).toUpperCase() + report.status.replace('_', ' ').slice(1)}
+                          {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -124,6 +143,7 @@ const Reports = () => {
                           <Button 
                             size="icon" 
                             variant="ghost"
+                            title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
