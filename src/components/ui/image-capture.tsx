@@ -21,6 +21,8 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
       reader.onload = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
+    // Reset input to allow selecting same file again
+    e.target.value = '';
   };
 
   const clearImage = () => {
@@ -39,7 +41,11 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
             <div className="text-center">
               <Button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 size="lg"
                 className="mb-2"
               >
@@ -66,7 +72,11 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
             <Button
               type="button"
               variant="outline"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
               className="flex-1"
             >
               <Upload className="h-4 w-4 mr-2" />
