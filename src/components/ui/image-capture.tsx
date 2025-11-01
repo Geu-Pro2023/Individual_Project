@@ -21,24 +21,52 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
   const startCamera = async () => {
     setIsLoading(true);
     setCameraError("");
+    
+    // Timeout after 10 seconds
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+      setCameraError("Camera loading timeout. Please try again or use upload instead.");
+    }, 10000);
+    
     try {
+      // Try with simpler constraints first
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
+        video: true
       });
+      
+      clearTimeout(timeout);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // Set up event handlers
         videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
           setIsCapturing(true);
           setIsLoading(false);
         };
+        
+        videoRef.current.oncanplay = () => {
+          console.log('Video can play');
+          if (!isCapturing) {
+            setIsCapturing(true);
+            setIsLoading(false);
+          }
+        };
+        
+        // Fallback - force show after 3 seconds if events don't fire
+        setTimeout(() => {
+          if (isLoading) {
+            console.log('Forcing camera display');
+            setIsCapturing(true);
+            setIsLoading(false);
+          }
+        }, 3000);
       }
     } catch (error: any) {
+      clearTimeout(timeout);
       console.error("Camera access error:", error);
-      setCameraError(error.message || "Camera access denied");
+      setCameraError(`Camera error: ${error.message || 'Access denied'}. Please allow camera permission and try again.`);
       setIsLoading(false);
     }
   };
@@ -150,8 +178,7 @@ export const ImageCapture = ({ label, onImageCapture, captured }: ImageCapturePr
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover transform scale-x-[-1]"
-            style={{ transform: 'scaleX(-1)' }}
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-4 border-2 border-white/70 rounded-lg"></div>
