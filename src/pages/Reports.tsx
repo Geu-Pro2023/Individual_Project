@@ -1,11 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, CheckCircle } from "lucide-react";
-import { ReportDetailsModal } from "@/components/reports/ReportDetailsModal";
-import { reportsAPI } from "@/services/api";
-import { toast } from "sonner";
+import { Eye } from "lucide-react";
 
 const mockReports = [
   { 
@@ -55,9 +52,7 @@ const mockReports = [
 ];
 
 const Reports = () => {
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<any>(null);
-  const [reports, setReports] = useState<any[]>(mockReports.map(report => ({
+  const reports = mockReports.map(report => ({
     id: report.id.split('-')[1],
     created_at: report.date,
     reporter_name: report.reporter.name,
@@ -68,96 +63,14 @@ const Reports = () => {
     status: report.status,
     location: report.location,
     message: report.description
-  })));
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      const data = await reportsAPI.getAll();
-      if (data && data.reports && data.reports.length > 0) {
-        setReports(data.reports);
-      } else {
-        // Use mock data when no reports available (for demo purposes)
-        setReports(mockReports.map(report => ({
-          id: report.id.split('-')[1],
-          created_at: report.date,
-          reporter_name: report.reporter.name,
-          reporter_phone: report.reporter.phone,
-          reporter_email: report.reporter.email,
-          report_type: report.type,
-          cow_tag: report.cow,
-          status: report.status,
-          location: report.location,
-          message: report.description
-        })));
-      }
-    } catch (error) {
-      console.error('API Error:', error);
-      // Always use mock data when API fails (for demo purposes)
-      setReports(mockReports.map(report => ({
-        id: report.id.split('-')[1],
-        created_at: report.date,
-        reporter_name: report.reporter.name,
-        reporter_phone: report.reporter.phone,
-        reporter_email: report.reporter.email,
-        report_type: report.type,
-        cow_tag: report.cow,
-        status: report.status,
-        location: report.location,
-        message: report.description
-      })));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleViewReport = (report: any) => {
-    setSelectedReport({
-      id: `RPT-${report.id.toString().padStart(3, '0')}`,
-      reporter: {
-        name: report.reporter_name,
-        phone: report.reporter_phone,
-        email: report.reporter_email,
-      },
-      submittedAt: new Date(report.created_at).toLocaleString(),
-      location: report.location,
-      cowTag: report.cow_tag,
-      type: report.report_type,
-      status: report.status,
-      description: report.message,
-    });
-    setDetailsModalOpen(true);
-  };
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Get all Reports</h1>
-          <p className="text-muted-foreground mt-1">Loading reports...</p>
-        </div>
-        <div className="h-64 bg-muted animate-pulse rounded-lg" />
-      </div>
-    );
-  }
+  }));
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Get all Reports</h1>
-          <p className="text-muted-foreground mt-1">
-            View all submitted reports from users
-          </p>
-        </div>
-        <Button onClick={fetchReports} disabled={loading}>
-          <Eye className="h-4 w-4 mr-2" />
-          {loading ? 'Loading...' : 'Refresh Reports'}
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Get all Reports</h1>
+        <p className="text-muted-foreground mt-1">
+          View all submitted reports from users
+        </p>
       </div>
 
       <Card className="shadow-card">
@@ -211,15 +124,9 @@ const Reports = () => {
                           <Button 
                             size="icon" 
                             variant="ghost"
-                            onClick={() => handleViewReport(report)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {report.status !== "resolved" && (
-                            <Button size="icon" variant="ghost" className="text-success">
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -231,12 +138,7 @@ const Reports = () => {
         </CardContent>
       </Card>
 
-      <ReportDetailsModal 
-        open={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
-        onReportUpdated={fetchReports}
-        report={selectedReport}
-      />
+
     </div>
   );
 };
