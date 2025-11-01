@@ -30,10 +30,19 @@ const RegisteredCows = () => {
       
       // Combine cow data with owner details
       const combinedData = cows.map(cow => {
-        console.log('Processing cow:', cow);
+        console.log('Processing cow - ALL FIELDS:', Object.keys(cow), cow);
         const owner = owners.find(o => {
-          console.log('Checking owner:', o.full_name, 'against cow owner_name:', cow.owner_name);
-          return o.full_name === cow.owner_name;
+          // Try ID matching first (proper way)
+          if (cow.owner_id && o.owner_id === cow.owner_id) {
+            console.log('MATCHED BY ID:', o.owner_id, 'for cow:', cow.cow_tag);
+            return true;
+          }
+          // Fallback to name matching
+          if (o.full_name === cow.owner_name) {
+            console.log('MATCHED BY NAME:', o.full_name, 'for cow:', cow.cow_tag);
+            return true;
+          }
+          return false;
         });
         
         console.log('Found owner:', owner, 'for cow:', cow.cow_tag);
