@@ -123,7 +123,7 @@ const TransferOwnership = () => {
         ? { new_owner_id: selectedExistingOwner }
         : newOwnerData;
 
-      await cattleAPI.transfer(transferData.cow.cow_id || transferData.cow.id, transferPayload);
+      await cattleAPI.transfer(transferData.cow.cow_tag, transferPayload);
       
       // Show success message
       toast.success(`Cow ${transferData.cow.cow_tag} successfully transferred to ${transferData.newOwner.full_name}`);
