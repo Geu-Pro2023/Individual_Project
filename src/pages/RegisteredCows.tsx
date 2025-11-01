@@ -32,10 +32,8 @@ const RegisteredCows = () => {
       const combinedData = cows.map(cow => {
         console.log('Processing cow:', cow);
         const owner = owners.find(o => {
-          console.log('Checking owner:', o, 'against cow owner_id:', cow.owner_id);
-          return o.owner_id === cow.owner_id || 
-                 o.id === cow.owner_id ||
-                 o.owner_full_name === cow.owner_full_name;
+          console.log('Checking owner:', o.full_name, 'against cow owner_name:', cow.owner_name);
+          return o.full_name === cow.owner_name;
         });
         
         console.log('Found owner:', owner, 'for cow:', cow.cow_tag);
@@ -43,11 +41,11 @@ const RegisteredCows = () => {
         return {
           ...cow,
           // Use owner data if found, otherwise fallback to cow data
-          owner_full_name: owner?.owner_full_name || owner?.full_name || cow.owner_full_name,
-          owner_phone: owner?.owner_phone || owner?.phone || cow.owner_phone,
-          owner_email: owner?.owner_email || owner?.email || cow.owner_email,
-          owner_address: owner?.owner_address || owner?.address || cow.owner_address,
-          owner_national_id: owner?.owner_national_id || owner?.national_id || cow.owner_national_id
+          owner_full_name: owner?.full_name || cow.owner_name,
+          owner_phone: owner?.phone || cow.owner_phone,
+          owner_email: owner?.email || 'N/A',
+          owner_address: owner?.address || 'N/A',
+          owner_national_id: owner?.national_id || 'N/A'
         };
       });
       
