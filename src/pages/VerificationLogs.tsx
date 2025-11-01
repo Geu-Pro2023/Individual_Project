@@ -13,9 +13,9 @@ const VerificationLogs = () => {
   const [filteredLogs, setFilteredLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [verifiedFilter, setVerifiedFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [verifiedFilter, setVerifiedFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,17 +59,17 @@ const VerificationLogs = () => {
     }
 
     // Verified filter
-    if (verifiedFilter) {
+    if (verifiedFilter && verifiedFilter !== 'all') {
       filtered = filtered.filter(log => log.verified === verifiedFilter);
     }
 
     // Location filter
-    if (locationFilter) {
+    if (locationFilter && locationFilter !== 'all') {
       filtered = filtered.filter(log => log.location === locationFilter);
     }
 
     // Date filter
-    if (dateFilter) {
+    if (dateFilter && dateFilter !== 'all') {
       const today = new Date();
       const filterDate = new Date(today);
       
@@ -252,7 +252,7 @@ const VerificationLogs = () => {
                 <SelectValue placeholder="Filter by result" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Results</SelectItem>
+                <SelectItem value="all">All Results</SelectItem>
                 <SelectItem value="yes">Verified</SelectItem>
                 <SelectItem value="no">Failed</SelectItem>
               </SelectContent>
@@ -262,7 +262,7 @@ const VerificationLogs = () => {
                 <SelectValue placeholder="Filter by location" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 {getUniqueLocations().map(location => (
                   <SelectItem key={location} value={location}>{location}</SelectItem>
                 ))}
@@ -273,7 +273,7 @@ const VerificationLogs = () => {
                 <SelectValue placeholder="Filter by date" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Time</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="week">Last 7 Days</SelectItem>
                 <SelectItem value="month">Last 30 Days</SelectItem>
@@ -283,9 +283,9 @@ const VerificationLogs = () => {
               variant="outline" 
               onClick={() => {
                 setSearchTerm("");
-                setVerifiedFilter("");
-                setLocationFilter("");
-                setDateFilter("");
+                setVerifiedFilter("all");
+                setLocationFilter("all");
+                setDateFilter("all");
                 setSortField("");
               }}
             >
