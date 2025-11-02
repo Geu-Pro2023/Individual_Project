@@ -90,13 +90,19 @@ const Register = () => {
       // Add facial image file (exactly 1)
       formDataToSend.append('facial_image_file', facialImage);
       
-      const result = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/register-cow`, {
+      const response = await fetch('https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/register-cow', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
         },
         body: formDataToSend,
-      }).then(res => res.json());
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Registration failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
       // Redirect to cattle page after successful registration
