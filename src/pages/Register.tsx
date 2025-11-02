@@ -79,9 +79,9 @@ const Register = () => {
       const result = await cattleAPI.register(registrationData, nosePrintFiles, facialImage);
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
-      // Redirect to cattle page after successful registration
+      // Redirect to registered cows page after successful registration
       setTimeout(() => {
-        navigate('/cattle');
+        navigate('/registered-cows');
       }, 2000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to register cattle');
