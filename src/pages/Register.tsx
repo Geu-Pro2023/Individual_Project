@@ -41,8 +41,28 @@ const Register = () => {
     }
   };
 
-  const handleImageCapture = (angle: string, file: File) => {
-    setNosePrintImages(prev => ({ ...prev, [angle]: file }));
+  const validateCowImage = async (file: File): Promise<boolean> => {
+    // Basic validation - check file type and size
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload only image files');
+      return false;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error('Image size must be less than 5MB');
+      return false;
+    }
+    
+    // TODO: Add ML-based cow detection validation here
+    // For now, we'll rely on backend validation
+    return true;
+  };
+
+  const handleImageCapture = async (angle: string, file: File) => {
+    const isValid = await validateCowImage(file);
+    if (isValid) {
+      setNosePrintImages(prev => ({ ...prev, [angle]: file }));
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -256,7 +276,12 @@ const Register = () => {
             <div className="max-w-xs">
               <ImageCapture
                 label="Facial Image"
-                onImageCapture={(file) => setFacialImage(file)}
+                onImageCapture={async (file) => {
+                  const isValid = await validateCowImage(file);
+                  if (isValid) {
+                    setFacialImage(file);
+                  }
+                }}
               />
             </div>
             <div className="mt-4">
