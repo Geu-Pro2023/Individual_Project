@@ -194,11 +194,12 @@ const Register = () => {
                     <SelectValue placeholder={t('breed')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Friesian">Friesian</SelectItem>
-                    <SelectItem value="Jersey">Jersey</SelectItem>
-                    <SelectItem value="Holstein">Holstein</SelectItem>
-                    <SelectItem value="Angus">Angus</SelectItem>
-                    <SelectItem value="Sahiwal">Sahiwal</SelectItem>
+                    <SelectItem value="Nilotic">Nilotic</SelectItem>
+                    <SelectItem value="Mongalla">Mongalla</SelectItem>
+                    <SelectItem value="Ankole-Watusi">Ankole-Watusi</SelectItem>
+                    <SelectItem value="Nuer">Nuer</SelectItem>
+                    <SelectItem value="Dinka">Dinka</SelectItem>
+                    <SelectItem value="Abigar">Abigar</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -239,16 +240,16 @@ const Register = () => {
           <CardHeader>
             <CardTitle>{t('nosePrintImages')}</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Upload 5 clear images of the cow's nose print from different angles
+              Upload exactly 3 clear images of the cow's nose print from different angles
             </p>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
-              {["Front", "Left", "Right"].map((angle) => (
+              {["Nose Print 1", "Nose Print 2", "Nose Print 3"].map((label, index) => (
                 <ImageCapture
-                  key={angle}
-                  label={`Nose ${angle}`}
-                  onImageCapture={(file) => handleImageCapture(angle, file)}
+                  key={label}
+                  label={label}
+                  onImageCapture={(file) => handleImageCapture(`nose_${index + 1}`, file)}
                 />
               ))}
             </div>
