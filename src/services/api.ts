@@ -19,14 +19,17 @@ export const dashboardAPI = {
 export const cattleAPI = {
   getAll: () => apiClient.get('/admin/cows'),
   getById: (id: string) => apiClient.get(`/admin/cows/${id}`),
-  register: async (data: any, files: File[]) => {
+  register: async (data: any, nosePrintFiles: File[], facialImageFile: File) => {
     const formData = new FormData();
     Object.keys(data).forEach(key => {
-      if (data[key] !== null && data[key] !== undefined) {
+      if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
         formData.append(key, data[key]);
       }
     });
-    files.forEach(file => formData.append('files', file));
+    // Add nose print files (exactly 3)
+    nosePrintFiles.forEach(file => formData.append('nose_print_files', file));
+    // Add facial image file (exactly 1)
+    formData.append('facial_image_file', facialImageFile);
     return apiClient.postForm('/admin/register-cow', formData);
   },
   update: (id: string, data: any) => apiClient.put(`/admin/cows/${id}`, data),

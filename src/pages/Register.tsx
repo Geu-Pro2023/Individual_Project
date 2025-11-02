@@ -76,10 +76,7 @@ const Register = () => {
         age: parseInt(formData.age),
       };
       
-      // Combine all files for the API
-      const allFiles = [...nosePrintFiles, facialImage];
-      
-      const result = await cattleAPI.register(registrationData, allFiles);
+      const result = await cattleAPI.register(registrationData, nosePrintFiles, facialImage);
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
       // Redirect to cattle page after successful registration
