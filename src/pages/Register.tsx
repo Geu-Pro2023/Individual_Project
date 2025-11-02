@@ -76,33 +76,10 @@ const Register = () => {
         age: parseInt(formData.age),
       };
       
-      // Create FormData manually to match backend requirements
-      const formDataToSend = new FormData();
-      Object.keys(registrationData).forEach(key => {
-        if (registrationData[key] !== null && registrationData[key] !== undefined && registrationData[key] !== '') {
-          formDataToSend.append(key, registrationData[key]);
-        }
-      });
+      // Combine all files for the API
+      const allFiles = [...nosePrintFiles, facialImage];
       
-      // Add nose print files (exactly 3)
-      nosePrintFiles.forEach(file => formDataToSend.append('nose_print_files', file));
-      
-      // Add facial image file (exactly 1)
-      formDataToSend.append('facial_image_file', facialImage);
-      
-      const response = await fetch('https://titweng-app-a3hufygwcphxhkc2.canadacentral-01.azurewebsites.net/admin/register-cow', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
-        },
-        body: formDataToSend,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Registration failed: ${response.status}`);
-      }
-      
-      const result = await response.json();
+      const result = await cattleAPI.register(registrationData, allFiles);
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
       // Redirect to cattle page after successful registration
