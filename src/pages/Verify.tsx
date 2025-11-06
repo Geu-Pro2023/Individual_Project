@@ -43,6 +43,7 @@ const Verify = () => {
         if (verification && verification.cow_found === true) {
           console.log('Full cow_details:', verification.cow_details);
           console.log('Facial image URL:', verification.cow_details?.facial_image_url);
+          console.log('Complete image URL will be:', `${import.meta.env.VITE_API_BASE_URL}${verification.cow_details?.facial_image_url}`);
           
           setVerificationResult({
             found: true,
@@ -257,11 +258,13 @@ const Verify = () => {
 
                       <div className="relative w-full h-64 border rounded bg-gray-50 overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
                         <img 
-                          src={`${import.meta.env.VITE_API_BASE_URL}${verificationResult.cow?.facial_image_url}`}
+                          src={`${import.meta.env.VITE_API_BASE_URL}/admin/cow/${verificationResult.cow?.cow_tag}/face`}
                           alt={`Cow ${verificationResult.cow?.cow_tag}`}
                           className="w-full h-full object-cover hover:scale-105 transition-transform"
                         onError={(e) => {
-                          console.log('Image failed to load - URL returns 404');
+                          console.error('Image failed to load!');
+                          console.error('Attempted URL:', e.currentTarget.src);
+                          console.error('Cow tag:', verificationResult.cow?.cow_tag);
                           e.currentTarget.style.display = 'none';
                           e.currentTarget.nextElementSibling.style.display = 'flex';
                         }}
@@ -324,7 +327,7 @@ const Verify = () => {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowImageModal(false)}>
           <div className="relative max-w-4xl max-h-full">
             <img 
-              src={`${import.meta.env.VITE_API_BASE_URL}${verificationResult.cow.facial_image_url}`}
+              src={`${import.meta.env.VITE_API_BASE_URL}/admin/cow/${verificationResult.cow.cow_tag}/face`}
               alt={`Cow ${verificationResult.cow.cow_tag} - Full Size`}
               className="max-w-full max-h-full object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
