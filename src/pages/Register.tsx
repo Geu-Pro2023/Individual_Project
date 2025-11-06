@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageCapture } from "@/components/ui/image-capture";
 import { cattleAPI } from "@/services/api";
+import { validatorAPI } from "@/services/validator";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/translations";
 
@@ -15,6 +16,7 @@ const Register = () => {
   const [cowTag, setCowTag] = useState("");
   const [nosePrintImages, setNosePrintImages] = useState<{[key: string]: File}>({});
   const [facialImage, setFacialImage] = useState<File | null>(null);
+  const [validatingImages, setValidatingImages] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     owner_full_name: '',
     owner_email: '',
@@ -53,16 +55,63 @@ const Register = () => {
       return false;
     }
     
-    // TODO: Add ML-based cow detection validation here
-    // For now, we'll rely on backend validation
     return true;
   };
 
-  const handleImageCapture = async (angle: string, file: File) => {
-    const isValid = await validateCowImage(file);
-    if (isValid) {
-      setNosePrintImages(prev => ({ ...prev, [angle]: file }));
+  const validateCowNosePrint = async (file: File): Promise<boolean> => {
+    try {
+      const result = await validatorAPI.validateCowImage(file);
+      
+      if (!result.is_cow_nose) {
+        toast.error('This is not a real cow nose print. Please use a real cow nose print image.');
+        return false;
+      }
+      
+      if (result.confidence < 0.7) {
+        toast.error(`Image quality is too low (${Math.round(result.confidence * 100)}% confidence). Please capture a clearer cow nose print.`);
+        return false;
+      }
+      
+      return true;
+    } catch (error: any) {
+      console.error('Validator API error:', error);
+      if (error.message.includes('Failed to fetch')) {
+        toast.error('Validator service is temporarily unavailable. Please try again later.');
+      } else {
+        toast.error('Failed to validate image. Please try again.');
+      }
+      return false;
     }
+  };
+
+  const handleImageCapture = async (angle: string, file: File) => {
+    const isBasicValid = await validateCowImage(file);
+    if (!isBasicValid) return;
+    
+    // Add to validating set
+    setValidatingImages(prev => new Set(prev).add(angle));
+    
+    const isCowNose = await validateCowNosePrint(file);
+    
+    // Remove from validating set
+    setValidatingImages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(angle);
+      return newSet;
+    });
+    
+    if (isCowNose) {
+      setNosePrintImages(prev => ({ ...prev, [angle]: file }));
+      toast.success('Valid cow nose print detected!');
+    }
+  };
+
+  const removeNosePrintImage = (angle: string) => {
+    setNosePrintImages(prev => {
+      const newImages = { ...prev };
+      delete newImages[angle];
+      return newImages;
+    });
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -253,12 +302,25 @@ const Register = () => {
                 />
               ))}
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                * Capture exactly 3 nose print images from different angles
-              </p>
-              <p className="text-xs font-medium text-primary">
-                {Object.keys(nosePrintImages).length}/3 nose images captured
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  * Capture exactly 3 nose print images from different angles
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-primary">
+                    {Object.keys(nosePrintImages).length}/3 nose images captured
+                  </p>
+                  {validatingImages.size > 0 && (
+                    <div className="flex items-center gap-1">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-primary"></div>
+                      <span className="text-xs text-muted-foreground">Validating...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-amber-600">
+                ⚠️ Images will be validated to ensure they are real cow nose prints
               </p>
             </div>
           </CardContent>
@@ -284,12 +346,18 @@ const Register = () => {
                 }}
               />
             </div>
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <p className="text-xs text-muted-foreground">
                 * Ensure the image clearly shows the cow's face
               </p>
-              <p className="text-xs font-medium text-primary">
-                {facialImage ? '1/1 facial image captured' : '0/1 facial image captured'}
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-medium text-primary">
+                  {facialImage ? '1/1 facial image captured' : '0/1 facial image captured'}
+                </p>
+
+              </div>
+              <p className="text-xs text-muted-foreground">
+                * This image is for physical verification purposes
               </p>
             </div>
           </CardContent>
