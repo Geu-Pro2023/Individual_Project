@@ -223,13 +223,23 @@ const Register = () => {
 
   return (
     <div className="space-y-6">
-      {/* Validation Step Message */}
+      {/* Validation Step Message - Center Screen */}
       {validationStep && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
-          {!validationStep.includes('✓') && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
-          )}
-          <span className="font-medium">{validationStep}</span>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center shadow-2xl">
+            {!validationStep.includes('✓') && (
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-6"></div>
+            )}
+            {validationStep.includes('✓') && (
+              <div className="text-green-500 text-6xl mb-6">✓</div>
+            )}
+            <h3 className="text-xl font-bold text-gray-800 mb-2">{validationStep}</h3>
+            <p className="text-gray-600 text-sm">
+              {validationStep.includes('Validating') && 'Please wait while we verify the nose prints...'}
+              {validationStep.includes('nose print of a cow') && 'Validation successful! Proceeding to registration...'}
+              {validationStep.includes('Registering') && 'Saving cattle data to the system...'}
+            </p>
+          </div>
         </div>
       )}
       
