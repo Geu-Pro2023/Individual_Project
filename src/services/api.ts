@@ -20,6 +20,9 @@ export const cattleAPI = {
   getAll: () => apiClient.get('/admin/cows'),
   getById: (id: string) => apiClient.get(`/admin/cows/${id}`),
   register: async (data: any, nosePrintFiles: File[], facialImageFile: File) => {
+    console.log('🚀 Starting registration API call...');
+    const startTime = Date.now();
+    
     const formData = new FormData();
     Object.keys(data).forEach(key => {
       if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
@@ -30,7 +33,13 @@ export const cattleAPI = {
     nosePrintFiles.forEach(file => formData.append('nose_print_files', file));
     // Add facial image file (exactly 1)
     formData.append('facial_image_file', facialImageFile);
-    return apiClient.postForm('/admin/register-cow', formData);
+    
+    console.log('📤 Sending registration request to backend...');
+    const result = await apiClient.postForm('/admin/register-cow', formData);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ Registration completed in ${duration}ms`);
+    return result;
   },
   update: (id: string, data: any) => apiClient.put(`/admin/cows/${id}`, data),
   transfer: (cowId: string, data: any) => {

@@ -44,6 +44,46 @@ const Register = () => {
     }
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = new Image();
+      
+      img.onload = () => {
+        // Resize to max 800x800 for faster processing
+        const maxSize = 800;
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          const compressedFile = new File([blob!], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          });
+          resolve(compressedFile);
+        }, 'image/jpeg', 0.8);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const validateCowImage = async (file: File): Promise<boolean> => {
     // Basic validation - check file type and size
     if (!file.type.startsWith('image/')) {
@@ -126,7 +166,7 @@ const Register = () => {
     setLoading(true);
     
     try {
-      const nosePrintFiles = Object.values(nosePrintImages);
+      let nosePrintFiles = Object.values(nosePrintImages);
       
       // Step 1: Validate cow nose prints
       setValidationStep('Validating cow nose prints...');
@@ -181,15 +221,22 @@ const Register = () => {
       });
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Step 3: Register cow
+      // Step 3: Compress images and register cow
       setValidationStep('Registering cow in siamese...');
+      
+      // Compress images for faster upload
+      console.log('🗜 Compressing images for faster upload...');
+      const compressedNoseFiles = await Promise.all(
+        nosePrintFiles.map(file => compressImage(file))
+      );
+      const compressedFacialImage = await compressImage(facialImage);
       
       const registrationData = {
         ...formData,
         age: parseInt(formData.age),
       };
       
-      const result = await cattleAPI.register(registrationData, nosePrintFiles, facialImage);
+      const result = await cattleAPI.register(registrationData, compressedNoseFiles, compressedFacialImage);
       
       setValidationStep('');
       toast.success(`🎉 CATTLE REGISTERED SUCCESSFULLY! Tag: ${result.cow_tag}`, {
