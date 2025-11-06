@@ -16,7 +16,7 @@ const Register = () => {
   const [cowTag, setCowTag] = useState("");
   const [nosePrintImages, setNosePrintImages] = useState<{[key: string]: File}>({});
   const [facialImage, setFacialImage] = useState<File | null>(null);
-  const [validatingImages, setValidatingImages] = useState<Set<string>>(new Set());
+
   const [formData, setFormData] = useState({
     owner_full_name: '',
     owner_email: '',
@@ -86,23 +86,8 @@ const Register = () => {
 
   const handleImageCapture = async (angle: string, file: File) => {
     const isBasicValid = await validateCowImage(file);
-    if (!isBasicValid) return;
-    
-    // Add to validating set
-    setValidatingImages(prev => new Set(prev).add(angle));
-    
-    const isCowNose = await validateCowNosePrint(file);
-    
-    // Remove from validating set
-    setValidatingImages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(angle);
-      return newSet;
-    });
-    
-    if (isCowNose) {
+    if (isBasicValid) {
       setNosePrintImages(prev => ({ ...prev, [angle]: file }));
-      toast.success('Valid cow nose print detected!');
     }
   };
 
@@ -138,20 +123,54 @@ const Register = () => {
     }
 
     setLoading(true);
+    
     try {
+      // Step 1: Validate cow nose prints
+      const loadingToast = toast.loading('Validating cow nose prints...');
+      
       const nosePrintFiles = Object.values(nosePrintImages);
+      
+      // Validate all nose print images
+      for (let i = 0; i < nosePrintFiles.length; i++) {
+        const result = await validatorAPI.validateCowImage(nosePrintFiles[i]);
+        
+        if (!result.is_cow_nose) {
+          toast.dismiss(loadingToast);
+          toast.error('This is not a cow nose print. Please use real cow nose print images.');
+          setLoading(false);
+          return;
+        }
+        
+        if (result.confidence < 0.7) {
+          toast.dismiss(loadingToast);
+          toast.error(`Image quality is too low (${Math.round(result.confidence * 100)}% confidence). Please capture clearer cow nose prints.`);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // Step 2: All validations passed
+      toast.dismiss(loadingToast);
+      toast.success('Cow nose prints validated successfully!');
+      
+      // Step 3: Register cow
+      const registerToast = toast.loading('Registering cow...');
+      
       const registrationData = {
         ...formData,
         age: parseInt(formData.age),
       };
       
       const result = await cattleAPI.register(registrationData, nosePrintFiles, facialImage);
+      
+      toast.dismiss(registerToast);
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
       // Redirect to registered cows page after successful registration
       setTimeout(() => {
         navigate('/registered-cows');
       }, 2000);
+      
     } catch (error: any) {
       toast.error(error.message || 'Failed to register cattle');
     } finally {
@@ -311,16 +330,11 @@ const Register = () => {
                   <p className="text-xs font-medium text-primary">
                     {Object.keys(nosePrintImages).length}/3 nose images captured
                   </p>
-                  {validatingImages.size > 0 && (
-                    <div className="flex items-center gap-1">
-                      <div className="animate-spin rounded-full h-3 w-3 border-b border-primary"></div>
-                      <span className="text-xs text-muted-foreground">Validating...</span>
-                    </div>
-                  )}
+
                 </div>
               </div>
               <p className="text-xs text-amber-600">
-                ⚠️ Images will be validated to ensure they are real cow nose prints
+                ⚠️ Images will be validated when you click Register
               </p>
             </div>
           </CardContent>
@@ -382,8 +396,8 @@ const Register = () => {
             <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <h3 className="text-lg font-semibold mb-2">Registering Cattle</h3>
-                <p className="text-muted-foreground text-sm">Processing nose prints and saving to database...</p>
+                <h3 className="text-lg font-semibold mb-2">Processing Registration</h3>
+                <p className="text-muted-foreground text-sm">Please wait while we validate and register the cattle...</p>
               </div>
             </div>
           </div>
