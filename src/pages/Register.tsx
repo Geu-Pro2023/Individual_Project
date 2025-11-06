@@ -134,17 +134,18 @@ const Register = () => {
       // Validate all nose print images
       for (let i = 0; i < nosePrintFiles.length; i++) {
         const result = await validatorAPI.validateCowImage(nosePrintFiles[i]);
+        console.log('Validation result:', result);
         
         if (!result.is_cow_nose) {
           setValidationStep('');
-          toast.error('This is not a cow nose print. Please use real cow nose print images.');
+          toast.error(`Image ${i+1}: This is not a cow nose print (${Math.round(result.confidence * 100)}% confidence). Please use real cow nose print images.`);
           setLoading(false);
           return;
         }
         
-        if (result.confidence < 0.5) {
+        if (result.confidence < 0.3) {
           setValidationStep('');
-          toast.error(`Image quality is too low (${Math.round(result.confidence * 100)}% confidence). Please capture clearer cow nose prints.`);
+          toast.error(`Image ${i+1}: Quality too low (${Math.round(result.confidence * 100)}% confidence). Please capture clearer cow nose prints.`);
           setLoading(false);
           return;
         }
