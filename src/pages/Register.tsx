@@ -139,14 +139,30 @@ const Register = () => {
           
           if (!result.is_cow_nose) {
             setValidationStep('');
-            toast.error(`Image ${i+1}: This is not a cow nose print (${Math.round(result.confidence * 100)}% confidence). Please use real cow nose print images.`);
+            toast.error(`🚫 Image ${i+1}: This is NOT a cow nose print (${Math.round(result.confidence * 100)}% confidence). Please use REAL cow nose print images.`, {
+              duration: 8000,
+              style: {
+                background: '#dc2626',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
+            });
             setLoading(false);
             return;
           }
           
           if (result.confidence < 0.8) {
             setValidationStep('');
-            toast.error(`Image ${i+1}: Quality too low (${Math.round(result.confidence * 100)}% confidence). Please capture clearer cow nose prints.`);
+            toast.error(`⚠️ Image ${i+1}: Quality TOO LOW (${Math.round(result.confidence * 100)}% confidence). Please capture CLEARER cow nose prints.`, {
+              duration: 8000,
+              style: {
+                background: '#ea580c',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }
+            });
             setLoading(false);
             return;
           }
@@ -160,7 +176,16 @@ const Register = () => {
       
       // Step 2: Validation passed
       setValidationStep('This is a nose print of a cow ✓');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success('✅ ALL NOSE PRINTS VALIDATED SUCCESSFULLY! These are REAL cow nose prints.', {
+        duration: 4000,
+        style: {
+          background: '#16a34a',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }
+      });
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Step 3: Register cow
       setValidationStep('Registering cow in siamese...');
@@ -173,7 +198,15 @@ const Register = () => {
       const result = await cattleAPI.register(registrationData, nosePrintFiles, facialImage);
       
       setValidationStep('');
-      toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
+      toast.success(`🎉 CATTLE REGISTERED SUCCESSFULLY! Tag: ${result.cow_tag}`, {
+        duration: 6000,
+        style: {
+          background: '#059669',
+          color: 'white',
+          fontSize: '18px',
+          fontWeight: 'bold'
+        }
+      });
       
       // Redirect to registered cows page after successful registration
       setTimeout(() => {
