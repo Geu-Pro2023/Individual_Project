@@ -28,6 +28,7 @@ const Register = () => {
     age: '',
   });
   const [loading, setLoading] = useState(false);
+  const [validationStep, setValidationStep] = useState<string>('');
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -125,36 +126,36 @@ const Register = () => {
     setLoading(true);
     
     try {
-      // Step 1: Validate cow nose prints
-      const loadingToast = toast.loading('Validating cow nose prints...');
-      
       const nosePrintFiles = Object.values(nosePrintImages);
+      
+      // Step 1: Validate cow nose prints
+      setValidationStep('Validating cow nose prints...');
       
       // Validate all nose print images
       for (let i = 0; i < nosePrintFiles.length; i++) {
         const result = await validatorAPI.validateCowImage(nosePrintFiles[i]);
         
         if (!result.is_cow_nose) {
-          toast.dismiss(loadingToast);
+          setValidationStep('');
           toast.error('This is not a cow nose print. Please use real cow nose print images.');
           setLoading(false);
           return;
         }
         
-        if (result.confidence < 0.7) {
-          toast.dismiss(loadingToast);
+        if (result.confidence < 0.5) {
+          setValidationStep('');
           toast.error(`Image quality is too low (${Math.round(result.confidence * 100)}% confidence). Please capture clearer cow nose prints.`);
           setLoading(false);
           return;
         }
       }
       
-      // Step 2: All validations passed
-      toast.dismiss(loadingToast);
-      toast.success('Cow nose prints validated successfully!');
+      // Step 2: Validation passed
+      setValidationStep('This is a nose print of a cow ✓');
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Step 3: Register cow
-      const registerToast = toast.loading('Registering cow...');
+      setValidationStep('Registering cow in siamese...');
       
       const registrationData = {
         ...formData,
@@ -163,7 +164,7 @@ const Register = () => {
       
       const result = await cattleAPI.register(registrationData, nosePrintFiles, facialImage);
       
-      toast.dismiss(registerToast);
+      setValidationStep('');
       toast.success(`Cattle registered successfully! Tag: ${result.cow_tag}`);
       
       // Redirect to registered cows page after successful registration
@@ -172,6 +173,7 @@ const Register = () => {
       }, 2000);
       
     } catch (error: any) {
+      setValidationStep('');
       toast.error(error.message || 'Failed to register cattle');
     } finally {
       setLoading(false);
@@ -180,6 +182,16 @@ const Register = () => {
 
   return (
     <div className="space-y-6">
+      {/* Validation Step Message */}
+      {validationStep && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+          {!validationStep.includes('✓') && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
+          )}
+          <span className="font-medium">{validationStep}</span>
+        </div>
+      )}
+      
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('registerNewCattle')}</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
