@@ -131,53 +131,47 @@ const Register = () => {
       // Step 1: Validate cow nose prints
       setValidationStep('Validating cow nose prints...');
       
-      // Validate all nose print images
-      for (let i = 0; i < nosePrintFiles.length; i++) {
+      // Validate all nose print images in parallel for speed
+      const validationPromises = nosePrintFiles.map(async (file, i) => {
         try {
-          const result = await validatorAPI.validateCowImage(nosePrintFiles[i]);
-          console.log('Validation result:', result);
+          const result = await validatorAPI.validateCowImage(file);
+          console.log(`Validation result ${i+1}:`, result);
           
           if (!result.is_cow_nose) {
-            setValidationStep('');
-            toast.error(`🚫 Image ${i+1}: This is NOT a cow nose print (${Math.round(result.confidence * 100)}% confidence). Please use REAL cow nose print images.`, {
-              duration: 8000,
-              style: {
-                background: '#dc2626',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }
-            });
-            setLoading(false);
-            return;
+            throw new Error(`Image ${i+1}: This is NOT a cow nose print (${Math.round(result.confidence * 100)}% confidence). Please use REAL cow nose print images.`);
           }
           
           if (result.confidence < 0.8) {
-            setValidationStep('');
-            toast.error(`⚠️ Image ${i+1}: Quality TOO LOW (${Math.round(result.confidence * 100)}% confidence). Please capture CLEARER cow nose prints.`, {
-              duration: 8000,
-              style: {
-                background: '#ea580c',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }
-            });
-            setLoading(false);
-            return;
+            throw new Error(`Image ${i+1}: Quality TOO LOW (${Math.round(result.confidence * 100)}% confidence). Please capture CLEARER cow nose prints.`);
           }
+          
+          return true;
         } catch (error) {
-          console.error('Validator error:', error);
-          // Temporary: Skip validation if validator fails
-          toast.error('Validator service unavailable. Proceeding without validation.');
-          break;
+          throw error;
         }
+      });
+      
+      try {
+        await Promise.all(validationPromises);
+      } catch (error: any) {
+        setValidationStep('');
+        toast.error(`🚫 ${error.message}`, {
+          duration: 8000,
+          style: {
+            background: '#dc2626',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+        setLoading(false);
+        return;
       }
       
       // Step 2: Validation passed
       setValidationStep('This is a nose print of a cow ✓');
       toast.success('✅ ALL NOSE PRINTS VALIDATED SUCCESSFULLY! These are REAL cow nose prints.', {
-        duration: 4000,
+        duration: 2000,
         style: {
           background: '#16a34a',
           color: 'white',
@@ -185,7 +179,7 @@ const Register = () => {
           fontWeight: 'bold'
         }
       });
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Step 3: Register cow
       setValidationStep('Registering cow in siamese...');
