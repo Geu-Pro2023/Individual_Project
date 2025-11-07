@@ -457,7 +457,7 @@ const Register = () => {
                       </SelectItem>
                       {!loadingOwners && existingOwners.length > 0 && (
                         <>
-                          <SelectItem value="" disabled>
+                          <SelectItem value="separator" disabled>
                             ─── Existing Owners ───
                           </SelectItem>
                           {existingOwners.map((owner, index) => {
