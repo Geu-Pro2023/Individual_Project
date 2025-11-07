@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageCapture } from "@/components/ui/image-capture";
-import { cattleAPI } from "@/services/api";
+import { cattleAPI, ownersAPI } from "@/services/api";
 import { validatorAPI } from "@/services/validator";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/translations";
@@ -50,7 +50,10 @@ const Register = () => {
   const fetchExistingOwners = async () => {
     try {
       const data = await ownersAPI.getAll();
-      setExistingOwners(data.owners || []);
+      console.log('Fetched owners data:', data);
+      const owners = data.owners || data || [];
+      console.log('Processed owners:', owners);
+      setExistingOwners(owners);
     } catch (error) {
       console.error('Failed to fetch owners:', error);
     }
@@ -395,28 +398,54 @@ const Register = () => {
                 <h4 className="font-medium text-blue-800 mb-3">Quick Owner Selection</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Select onValueChange={(value) => {
-                    const owner = existingOwners.find(o => o.id?.toString() === value);
+                    if (value === 'new') {
+                      clearOwnerForm();
+                      return;
+                    }
+                    
+                    const owner = existingOwners.find(o => 
+                      (o.id && o.id.toString() === value) || 
+                      (o.owner_id && o.owner_id.toString() === value)
+                    );
+                    
                     if (owner) {
+                      console.log('Selected owner:', owner);
                       setFormData(prev => ({
                         ...prev,
-                        owner_full_name: owner.owner_full_name || owner.full_name || '',
+                        owner_full_name: owner.owner_full_name || owner.full_name || owner.name || '',
                         owner_email: owner.owner_email || owner.email || '',
                         owner_phone: owner.owner_phone || owner.phone || '',
                         owner_address: owner.owner_address || owner.address || '',
                         owner_national_id: owner.owner_national_id || owner.national_id || '',
                       }));
-                      toast.success(`✅ Selected: ${owner.owner_full_name || owner.full_name}`);
+                      toast.success(`✅ Selected: ${owner.owner_full_name || owner.full_name || owner.name}`);
                     }
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select existing owner" />
                     </SelectTrigger>
                     <SelectContent>
-                      {existingOwners.map((owner) => (
-                        <SelectItem key={owner.id} value={owner.id?.toString() || ''}>
-                          {owner.owner_full_name || owner.full_name} - {owner.owner_phone || owner.phone}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="new">
+                        ➕ Enter New Owner
+                      </SelectItem>
+                      {existingOwners.length > 0 && (
+                        <>
+                          <SelectItem value="" disabled>
+                            ─── Existing Owners ───
+                          </SelectItem>
+                          {existingOwners.map((owner, index) => {
+                            const ownerId = owner.id || owner.owner_id || index;
+                            const ownerName = owner.owner_full_name || owner.full_name || owner.name || 'Unknown';
+                            const ownerPhone = owner.owner_phone || owner.phone || 'No phone';
+                            
+                            return (
+                              <SelectItem key={ownerId} value={ownerId.toString()}>
+                                {ownerName} - {ownerPhone}
+                              </SelectItem>
+                            );
+                          })}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   <Button type="button" variant="outline" onClick={clearOwnerForm}>
