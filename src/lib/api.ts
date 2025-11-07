@@ -40,6 +40,12 @@ const apiClient = {
       },
       body: formData,
     });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `HTTP ${response.status}`);
+    }
+    
     return response.json();
   },
 

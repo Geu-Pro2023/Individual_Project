@@ -27,12 +27,15 @@ const Register = () => {
     color: '',
     age: '',
   });
+  const [existingOwners, setExistingOwners] = useState<any[]>([]);
+  const [phoneSearching, setPhoneSearching] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validationStep, setValidationStep] = useState<string>('');
   const { t } = useTranslation();
 
   useEffect(() => {
     fetchTagInfo();
+    fetchExistingOwners();
   }, []);
 
   const fetchTagInfo = async () => {
@@ -42,6 +45,36 @@ const Register = () => {
     } catch (error) {
       console.error('Failed to fetch tag info:', error);
     }
+  };
+
+  const fetchExistingOwners = async () => {
+    try {
+      const data = await ownersAPI.getAll();
+      setExistingOwners(data.owners || []);
+    } catch (error) {
+      console.error('Failed to fetch owners:', error);
+    }
+  };
+
+  const handlePhoneLookup = async (phone: string) => {
+    if (phone.length < 8) return; // Wait for reasonable phone length
+    
+    setPhoneSearching(true);
+    const matchingOwner = existingOwners.find(owner => 
+      owner.owner_phone === phone || owner.phone === phone
+    );
+    
+    if (matchingOwner) {
+      setFormData(prev => ({
+        ...prev,
+        owner_full_name: matchingOwner.owner_full_name || matchingOwner.full_name || '',
+        owner_email: matchingOwner.owner_email || matchingOwner.email || '',
+        owner_address: matchingOwner.owner_address || matchingOwner.address || '',
+        owner_national_id: matchingOwner.owner_national_id || matchingOwner.national_id || '',
+      }));
+      toast.success(`✅ Owner found: ${matchingOwner.owner_full_name || matchingOwner.full_name}`);
+    }
+    setPhoneSearching(false);
   };
 
   const compressImage = async (file: File): Promise<File> => {
@@ -142,6 +175,22 @@ const Register = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-lookup when phone number is entered
+    if (field === 'owner_phone' && value.length >= 8) {
+      handlePhoneLookup(value);
+    }
+  };
+
+  const clearOwnerForm = () => {
+    setFormData(prev => ({
+      ...prev,
+      owner_full_name: '',
+      owner_email: '',
+      owner_phone: '',
+      owner_address: '',
+      owner_national_id: '',
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -289,20 +338,16 @@ const Register = () => {
       setValidationStep('');
       console.log('Registration error:', error);
       
-      // Handle 409 Conflict (duplicate cow)
-      if (error.message && error.message.includes('409')) {
-        toast.error('🚫 COW ALREADY REGISTERED! This cow is already in the system. Please register a new cow.', {
-          duration: 8000,
-          style: {
-            background: '#dc2626',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }
-        });
-      } else {
-        toast.error(error.message || 'Failed to register cattle');
-      }
+      // Show the detailed error message from backend
+      toast.error(error.message || 'Failed to register cattle', {
+        duration: 8000,
+        style: {
+          background: '#dc2626',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -345,6 +390,63 @@ const Register = () => {
               <CardTitle>{t('ownerInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Owner Selection Options */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-800 mb-3">Quick Owner Selection</h4>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Select onValueChange={(value) => {
+                    const owner = existingOwners.find(o => o.id?.toString() === value);
+                    if (owner) {
+                      setFormData(prev => ({
+                        ...prev,
+                        owner_full_name: owner.owner_full_name || owner.full_name || '',
+                        owner_email: owner.owner_email || owner.email || '',
+                        owner_phone: owner.owner_phone || owner.phone || '',
+                        owner_address: owner.owner_address || owner.address || '',
+                        owner_national_id: owner.owner_national_id || owner.national_id || '',
+                      }));
+                      toast.success(`✅ Selected: ${owner.owner_full_name || owner.full_name}`);
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select existing owner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {existingOwners.map((owner) => (
+                        <SelectItem key={owner.id} value={owner.id?.toString() || ''}>
+                          {owner.owner_full_name || owner.full_name} - {owner.owner_phone || owner.phone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={clearOwnerForm}>
+                    Clear & Enter New Owner
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  💡 Select existing owner or enter phone number below to auto-fill details
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="ownerPhone">{t('phone')} *</Label>
+                <div className="relative">
+                  <Input 
+                    id="ownerPhone" 
+                    type="tel" 
+                    placeholder="Enter phone to auto-fill owner details" 
+                    value={formData.owner_phone}
+                    onChange={(e) => handleInputChange('owner_phone', e.target.value)}
+                    required 
+                  />
+                  {phoneSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="ownerName">{t('fullName')} *</Label>
                 <Input 
@@ -365,17 +467,7 @@ const Register = () => {
                   onChange={(e) => handleInputChange('owner_email', e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">{t('phone')} *</Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  placeholder={t('phone')} 
-                  value={formData.owner_phone}
-                  onChange={(e) => handleInputChange('owner_phone', e.target.value)}
-                  required 
-                />
-              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="address">{t('address')} *</Label>
                 <Input 
