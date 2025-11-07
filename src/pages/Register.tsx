@@ -29,6 +29,7 @@ const Register = () => {
   });
   const [existingOwners, setExistingOwners] = useState<any[]>([]);
   const [phoneSearching, setPhoneSearching] = useState(false);
+  const [loadingOwners, setLoadingOwners] = useState(true);
   const [loading, setLoading] = useState(false);
   const [validationStep, setValidationStep] = useState<string>('');
   const { t } = useTranslation();
@@ -49,13 +50,35 @@ const Register = () => {
 
   const fetchExistingOwners = async () => {
     try {
+      setLoadingOwners(true);
       const data = await ownersAPI.getAll();
       console.log('Fetched owners data:', data);
-      const owners = data.owners || data || [];
+      
+      // Handle different possible response formats
+      let owners = [];
+      if (data.owners) {
+        owners = data.owners;
+      } else if (Array.isArray(data)) {
+        owners = data;
+      } else if (data.data) {
+        owners = data.data;
+      }
+      
       console.log('Processed owners:', owners);
       setExistingOwners(owners);
-    } catch (error) {
+      
+      if (owners.length === 0) {
+        console.log('No owners found in database');
+      }
+    } catch (error: any) {
       console.error('Failed to fetch owners:', error);
+      if (error.message?.includes('Invalid authentication')) {
+        toast.error('Session expired. Please login again.');
+      } else {
+        toast.error('Failed to load existing owners');
+      }
+    } finally {
+      setLoadingOwners(false);
     }
   };
 
@@ -397,7 +420,7 @@ const Register = () => {
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h4 className="font-medium text-blue-800 mb-3">Quick Owner Selection</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Select onValueChange={(value) => {
+                  <Select disabled={loadingOwners} onValueChange={(value) => {
                     if (value === 'new') {
                       clearOwnerForm();
                       return;
@@ -422,13 +445,17 @@ const Register = () => {
                     }
                   }}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select existing owner" />
+                      <SelectValue placeholder={
+                        loadingOwners ? "Loading owners..." : 
+                        existingOwners.length === 0 ? "No owners found" :
+                        "Select existing owner"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">
                         ➕ Enter New Owner
                       </SelectItem>
-                      {existingOwners.length > 0 && (
+                      {!loadingOwners && existingOwners.length > 0 && (
                         <>
                           <SelectItem value="" disabled>
                             ─── Existing Owners ───
@@ -453,7 +480,9 @@ const Register = () => {
                   </Button>
                 </div>
                 <p className="text-xs text-blue-600 mt-2">
-                  💡 Select existing owner or enter phone number below to auto-fill details
+                  💡 {loadingOwners ? 'Loading owners...' : 
+                    existingOwners.length === 0 ? 'No existing owners found. Enter details manually.' :
+                    `Found ${existingOwners.length} existing owners. Select one or enter phone number below to auto-fill details`}
                 </p>
               </div>
               
