@@ -19,6 +19,7 @@ const Cattle = () => {
   const [cattle, setCattle] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [groupByOwner, setGroupByOwner] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -42,6 +43,16 @@ const Cattle = () => {
     cow.owner_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cow.breed?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Group cattle by owner
+  const groupedCattle = filteredCattle.reduce((groups: any, cow: any) => {
+    const ownerName = cow.owner_full_name || 'Unknown Owner';
+    if (!groups[ownerName]) {
+      groups[ownerName] = [];
+    }
+    groups[ownerName].push(cow);
+    return groups;
+  }, {});
 
   const handleViewDetails = (cow: any) => {
     setSelectedCow({
@@ -98,6 +109,13 @@ const Cattle = () => {
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
+          <Button 
+            variant={groupByOwner ? "default" : "outline"}
+            onClick={() => setGroupByOwner(!groupByOwner)}
+            className="whitespace-nowrap"
+          >
+            {groupByOwner ? '📋 List View' : '👥 Group by Owner'}
+          </Button>
           <BarcodeScanner onScanResult={(result) => setSearchTerm(result)} />
           <DataExport 
             data={filteredCattle}
@@ -138,82 +156,180 @@ const Cattle = () => {
         </CardContent>
       </Card>
 
-      {/* Data Table */}
-      <Card className="shadow-card">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <Table className="min-w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('cattleId')}</TableHead>
-                  <TableHead>{t('ownerName')}</TableHead>
-                  <TableHead>{t('breed')}</TableHead>
-                  <TableHead>{t('color')}</TableHead>
-                  <TableHead>{t('age')}</TableHead>
-                  <TableHead>{t('registrationDate')}</TableHead>
-                  <TableHead className="text-right">{t('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCattle.length === 0 ? (
+      {/* Data Display - Table or Grouped View */}
+      {groupByOwner ? (
+        /* Grouped by Owner View */
+        <div className="space-y-4">
+          {Object.keys(groupedCattle).length === 0 ? (
+            <Card className="shadow-card">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                {searchTerm ? 'No cattle found matching your search' : 'No cattle registered yet'}
+              </CardContent>
+            </Card>
+          ) : (
+            Object.entries(groupedCattle).map(([ownerName, ownerCattle]: [string, any]) => (
+              <Card key={ownerName} className="shadow-card">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        👥 {ownerName}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {ownerCattle.length} {ownerCattle.length === 1 ? 'cow' : 'cows'} registered
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-primary">{ownerCattle.length}</div>
+                      <div className="text-xs text-muted-foreground">Total Cattle</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('cattleId')}</TableHead>
+                          <TableHead>{t('breed')}</TableHead>
+                          <TableHead>{t('color')}</TableHead>
+                          <TableHead>{t('age')}</TableHead>
+                          <TableHead>{t('registrationDate')}</TableHead>
+                          <TableHead className="text-right">{t('actions')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {ownerCattle.map((cow: any) => (
+                          <TableRow key={cow.id}>
+                            <TableCell className="font-mono font-semibold text-primary">
+                              {cow.cow_tag}
+                            </TableCell>
+                            <TableCell>{cow.breed}</TableCell>
+                            <TableCell>{cow.color}</TableCell>
+                            <TableCell>{cow.age} years</TableCell>
+                            <TableCell>{new Date(cow.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <div className="flex justify-end gap-1 sm:gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => handleViewDetails(cow)}
+                                  title={t('view')}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => setTransferWizardOpen(true)}
+                                  title="Transfer Ownership"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                                <Button size="sm" variant="ghost" title={t('edit')} className="h-8 w-8 p-0">
+                                  <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="text-destructive h-8 w-8 p-0" 
+                                  title={t('delete')}
+                                  onClick={() => handleDeleteCow(cow.cow_tag)}
+                                >
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      ) : (
+        /* Regular Table View */
+        <Card className="shadow-card">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
+              <Table className="min-w-full">
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? t('noData') : t('noData')}
-                    </TableCell>
+                    <TableHead>{t('cattleId')}</TableHead>
+                    <TableHead>{t('ownerName')}</TableHead>
+                    <TableHead>{t('breed')}</TableHead>
+                    <TableHead>{t('color')}</TableHead>
+                    <TableHead>{t('age')}</TableHead>
+                    <TableHead>{t('registrationDate')}</TableHead>
+                    <TableHead className="text-right">{t('actions')}</TableHead>
                   </TableRow>
-                ) : (
-                  filteredCattle.map((cow) => (
-                    <TableRow key={cow.id}>
-                      <TableCell className="font-mono font-semibold text-primary">
-                        {cow.cow_tag}
+                </TableHeader>
+                <TableBody>
+                  {filteredCattle.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        {searchTerm ? t('noData') : t('noData')}
                       </TableCell>
-                      <TableCell>{cow.owner_full_name}</TableCell>
-                      <TableCell>{cow.breed}</TableCell>
-                      <TableCell>{cow.color}</TableCell>
-                      <TableCell>{cow.age} years</TableCell>
-                      <TableCell>{new Date(cow.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-1 sm:gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => handleViewDetails(cow)}
-                          title={t('view')}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => setTransferWizardOpen(true)}
-                          title="Transfer Ownership"
-                          className="h-8 w-8 p-0"
-                        >
-                          <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" title={t('edit')} className="h-8 w-8 p-0">
-                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="text-destructive h-8 w-8 p-0" 
-                          title={t('delete')}
-                          onClick={() => handleDeleteCow(cow.cow_tag)}
-                        >
-                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                  ) : (
+                    filteredCattle.map((cow) => (
+                      <TableRow key={cow.id}>
+                        <TableCell className="font-mono font-semibold text-primary">
+                          {cow.cow_tag}
+                        </TableCell>
+                        <TableCell>{cow.owner_full_name}</TableCell>
+                        <TableCell>{cow.breed}</TableCell>
+                        <TableCell>{cow.color}</TableCell>
+                        <TableCell>{cow.age} years</TableCell>
+                        <TableCell>{new Date(cow.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1 sm:gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handleViewDetails(cow)}
+                              title={t('view')}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => setTransferWizardOpen(true)}
+                              title="Transfer Ownership"
+                              className="h-8 w-8 p-0"
+                            >
+                              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" title={t('edit')} className="h-8 w-8 p-0">
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-destructive h-8 w-8 p-0" 
+                              title={t('delete')}
+                              onClick={() => handleDeleteCow(cow.cow_tag)}
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <CowDetailsModal 
         open={detailsModalOpen} 
