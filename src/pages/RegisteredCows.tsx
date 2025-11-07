@@ -19,6 +19,7 @@ const RegisteredCows = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [faceModalOpen, setFaceModalOpen] = useState(false);
   const [selectedCowFace, setSelectedCowFace] = useState<{tag: string, image: string} | null>(null);
+  const [groupByOwner, setGroupByOwner] = useState(false);
 
   useEffect(() => {
     setFilteredCows(cows);
@@ -207,6 +208,12 @@ const RegisteredCows = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant={groupByOwner ? "default" : "outline"}
+            onClick={() => setGroupByOwner(!groupByOwner)}
+          >
+            {groupByOwner ? '📋 List View' : '👥 Group by Owner'}
+          </Button>
           <Button onClick={fetchCows} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             {loading ? 'Loading...' : 'Refresh'}
@@ -380,10 +387,12 @@ const RegisteredCows = () => {
                   ))
                 )}
               </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Cow Face Modal */}
       <Dialog open={faceModalOpen} onOpenChange={setFaceModalOpen}>
