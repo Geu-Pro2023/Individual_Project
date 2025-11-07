@@ -39,6 +39,7 @@ export const cattleAPI = {
     
     const duration = Date.now() - startTime;
     console.log(`✅ Registration completed in ${duration}ms`);
+    console.log('Full backend response:', JSON.stringify(result, null, 2));
     return result;
   },
   update: (id: string, data: any) => apiClient.put(`/admin/cows/${id}`, data),

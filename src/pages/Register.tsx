@@ -239,15 +239,46 @@ const Register = () => {
       const result = await cattleAPI.register(registrationData, compressedNoseFiles, compressedFacialImage);
       
       setValidationStep('');
-      toast.success(`🎉 CATTLE REGISTERED SUCCESSFULLY! Tag: ${result.cow_tag}`, {
-        duration: 6000,
-        style: {
-          background: '#059669',
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: 'bold'
-        }
-      });
+      
+      // Check if registration was successful
+      if (result.success === false) {
+        // Handle duplicate cow registration
+        toast.error(`🚫 COW ALREADY REGISTERED! Tag: ${result.existing_cow_tag}. Please register a new cow.`, {
+          duration: 8000,
+          style: {
+            background: '#dc2626',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+        setLoading(false);
+        return;
+      } else if (result.cow_tag) {
+        // Successful registration
+        toast.success(`🎉 CATTLE REGISTERED SUCCESSFULLY! Tag: ${result.cow_tag}`, {
+          duration: 6000,
+          style: {
+            background: '#059669',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 'bold'
+          }
+        });
+      } else {
+        // Other errors
+        toast.error('❌ REGISTRATION FAILED: Invalid response from server', {
+          duration: 8000,
+          style: {
+            background: '#dc2626',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+        setLoading(false);
+        return;
+      }
       
       // Redirect to registered cows page after successful registration
       setTimeout(() => {
@@ -256,7 +287,22 @@ const Register = () => {
       
     } catch (error: any) {
       setValidationStep('');
-      toast.error(error.message || 'Failed to register cattle');
+      console.log('Registration error:', error);
+      
+      // Handle 409 Conflict (duplicate cow)
+      if (error.message && error.message.includes('409')) {
+        toast.error('🚫 COW ALREADY REGISTERED! This cow is already in the system. Please register a new cow.', {
+          duration: 8000,
+          style: {
+            background: '#dc2626',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+      } else {
+        toast.error(error.message || 'Failed to register cattle');
+      }
     } finally {
       setLoading(false);
     }
